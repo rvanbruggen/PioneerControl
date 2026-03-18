@@ -312,6 +312,8 @@ main {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    cursor: pointer;
+    user-select: none;
 }
 
 .zone-header-controls {

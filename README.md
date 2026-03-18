@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.2.1**
+**Current version: 0.2.2**
 
 ## Why this project?
 
@@ -184,6 +184,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.2.2** — Clickable zone titles (h2) toggle expand/collapse. Main Zone and Zone 2 now expand by default on load.
 - **0.2.1** — `sources.md` configuration file: edit once on the NAS to set default input sources for all users. No per-device setup needed for family members.
 - **0.2.0** — CORS proxy (`proxy.py`) for browsers that block direct HTTP requests. Configurable app name. Separate amp IP / proxy address fields in settings. Per-zone configurable input sources (checkboxes in settings). Direct volume entry by clicking the dB display. Disconnect button.
 - **0.1.0** — Initial release. Multi-zone control (power, volume, mute, input select), live status polling, responsive dark-theme UI.

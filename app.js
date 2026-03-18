@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.2.1';
+    const APP_VERSION = '0.2.2';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -599,10 +599,16 @@
         renderInputButtons('z2');
         renderInputButtons('hd');
 
-        // Collapse toggles for zone 2 and HD zone
+        // Collapse toggles — collapse button and zone title h2 both toggle
         $$('.btn-collapse').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var card = btn.closest('.zone-card');
+                handleCollapseToggle(card);
+            });
+        });
+        $$('.zone-header h2').forEach(function (h2) {
+            h2.addEventListener('click', function () {
+                var card = h2.closest('.zone-card');
                 handleCollapseToggle(card);
             });
         });
