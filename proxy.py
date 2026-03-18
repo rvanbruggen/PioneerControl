@@ -13,7 +13,7 @@ In the app, enter  localhost:8080  as the amp IP.
 
 How it works:
     Requests to /EventHandler.asp and /StatusHandler.asp are forwarded to
-    the real amp. All other requests are served from the docs/ directory.
+    the real amp. All other requests are served from the project root directory.
     Because everything is on the same origin (localhost), the browser
     raises no CORS errors.
 """
@@ -34,8 +34,8 @@ def main():
     amp_ip = sys.argv[1]
     port   = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
 
-    # Serve static files from the docs/ directory
-    docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'docs')
+    # Serve static files from the project root directory
+    docs_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(docs_dir)
 
     class Handler(SimpleHTTPRequestHandler):

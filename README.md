@@ -85,9 +85,6 @@ The Pioneer amplifier has a built-in web server. You may be able to place the fi
 | `PO` / `PF` | Main zone power on / off |
 | `APO` / `APF` | Zone 2 power on / off |
 | `ZEA` / `ZEF` | HD Zone power on / off |
-| `PO` / `PF` | Main zone power on / off |
-| `APO` / `APF` | Zone 2 power on / off |
-| `ZEA` / `ZEF` | HD Zone power on / off |
 | `VU` / `VD` | Main zone volume up / down |
 | `ZU` / `ZD` | Zone 2 volume up / down |
 | `HZU` / `HZD` | HD Zone volume up / down |
@@ -150,12 +147,11 @@ The `StatusHandler.asp` endpoint returns JSON:
 
 ```
 RixPioneerControl/
-├── docs/                  # Web app (GitHub Pages source)
-│   ├── index.html         # Main page
-│   ├── app.js             # Application logic & network layer
-│   └── style.css          # Responsive styles
-├── InteractiveOperatingGuide/  # Original Pioneer web interface (reference)
+├── index.html             # Main page
+├── app.js                 # Application logic & network layer
+├── style.css              # Responsive styles
 ├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
+├── PioneerSources/        # Original Pioneer web interface (reference, do not modify)
 ├── CLAUDE.md              # AI coding assistant instructions
 ├── LICENSE                # MIT License
 └── README.md              # This file
