@@ -28,7 +28,7 @@ The app communicates directly with the Pioneer amplifier over your local network
 - **Commands** are sent via `POST http://<amp-ip>/EventHandler.asp` with the body `WebToHostItem=<command>`
 - **Status** is polled via `GET http://<amp-ip>/StatusHandler.asp` which returns JSON with the full amplifier state
 
-The protocol was reverse-engineered from the amplifier's built-in Interactive Operating Guide (included in the `InteractiveOperatingGuide/` directory for reference).
+The protocol was reverse-engineered from the amplifier's built-in Interactive Operating Guide (included in the `PioneerSources/` directory for reference).
 
 ## Supported models
 
