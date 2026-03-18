@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.2.0**
+**Current version: 0.2.1**
 
 ## Why this project?
 
@@ -13,7 +13,7 @@ Pioneer's official Android app for controlling their network-connected amplifier
 - **Multi-zone control** — Main Zone, Zone 2, and HD Zone
 - **Power on/off** per zone
 - **Volume control** — up/down/mute per zone with long-press, plus direct dB entry by clicking the volume display
-- **Configurable input sources** — choose which inputs appear per zone in settings
+- **Configurable input sources** — `sources.md` in the project sets the default inputs per zone for all users; individuals can still override via Settings
 - **Live status display** — real-time power state, volume level (in dB), active input, and listening mode
 - **Configurable app name** — rename the app to anything you like
 - **CORS proxy** — `proxy.py` sidesteps browser CORS restrictions for local use
@@ -146,6 +146,27 @@ The `StatusHandler.asp` endpoint returns JSON:
 - `M`: Mute (1=muted, 0=unmuted)
 - `F`: Input function code
 
+## Configuring default input sources
+
+The file `sources.md` in the project root controls which input sources appear
+by default for each zone. Edit it in any text editor — it is plain text with
+simple `## Zone Name` headings and a comma-separated list of input names.
+
+When a user opens the app for the first time (no personal settings saved yet),
+the app fetches `sources.md` automatically and shows only the listed inputs.
+This means family members on the NAS never need to touch the Settings screen —
+they just get the right inputs straight away.
+
+Individual users can still go to Settings (gear icon) and check/uncheck inputs
+for their own device. Their choice is saved locally and takes priority over
+`sources.md`. To reset back to the file defaults they can clear the site data
+for the page.
+
+**Updating defaults for everyone:** edit `sources.md` on the NAS, save, done.
+Devices that already have personal settings saved are not affected (those take
+priority). Fresh devices or devices after a settings reset will pick up the
+new defaults on next load.
+
 ## Project structure
 
 ```
@@ -154,6 +175,7 @@ RixPioneerControl/
 ├── app.js                 # Application logic & network layer
 ├── style.css              # Responsive styles
 ├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
+├── sources.md             # Default input sources per zone (edit to customise for all users)
 ├── PioneerSources/        # Original Pioneer web interface (reference, do not modify)
 ├── CLAUDE.md              # AI coding assistant instructions
 ├── LICENSE                # MIT License
@@ -162,6 +184,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.2.1** — `sources.md` configuration file: edit once on the NAS to set default input sources for all users. No per-device setup needed for family members.
 - **0.2.0** — CORS proxy (`proxy.py`) for browsers that block direct HTTP requests. Configurable app name. Separate amp IP / proxy address fields in settings. Per-zone configurable input sources (checkboxes in settings). Direct volume entry by clicking the dB display. Disconnect button.
 - **0.1.0** — Initial release. Multi-zone control (power, volume, mute, input select), live status polling, responsive dark-theme UI.
 

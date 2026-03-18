@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.2.0';
+    const APP_VERSION = '0.2.1';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -20,6 +20,9 @@
     let statusTimer = null;
     let connected = false;
     let lastCommandTime = 0;
+
+    // Default input sources loaded from sources.md (null = fall back to all inputs)
+    let defaultSources = null;
 
     // ----- Input function code to name mapping -----
     const INPUT_MAP = {
@@ -430,11 +433,38 @@
         card.classList.toggle('collapsed');
     }
 
+    // Parse sources.md into { main: ['BD','TV',...], z2: [...], hd: [...] }
+    function parseSourcesMd(text) {
+        var result = {};
+        var zoneMap = { 'Main Zone': 'main', 'Zone 2': 'z2', 'HD Zone': 'hd' };
+        var currentZone = null;
+        text.split('\n').forEach(function (line) {
+            var heading = line.match(/^##\s+(.+)/);
+            if (heading) {
+                currentZone = zoneMap[heading[1].trim()] || null;
+            } else if (currentZone && line.trim() && !line.trim().startsWith('#')) {
+                var names = line.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+                if (names.length) {
+                    result[currentZone] = (result[currentZone] || []).concat(names);
+                }
+            }
+        });
+        return result;
+    }
+
     function loadEnabledInputs(zone) {
         var stored = localStorage.getItem('pioneer_inputs_' + zone);
         if (stored) {
             try { return JSON.parse(stored); } catch (e) {}
         }
+        // Use defaults from sources.md if it was loaded successfully
+        if (defaultSources && defaultSources[zone]) {
+            var names = defaultSources[zone];
+            return ZONE_INPUTS[zone]
+                .filter(function (i) { return names.indexOf(i.name) !== -1; })
+                .map(function (i) { return i.cmd; });
+        }
+        // Fall back to showing all inputs
         return ZONE_INPUTS[zone].map(function (i) { return i.cmd; });
     }
 
@@ -637,5 +667,21 @@
         stopPolling();
     });
 
-    document.addEventListener('DOMContentLoaded', init);
+    // Fetch sources.md for default input configuration, then initialise.
+    // Works when served via proxy/NAS; silently skipped when opened as file://.
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('sources.md')
+            .then(function (r) { return r.ok ? r.text() : null; })
+            .then(function (text) {
+                if (text) {
+                    var parsed = parseSourcesMd(text);
+                    if (Object.keys(parsed).length) defaultSources = parsed;
+                }
+                init();
+            })
+            .catch(function () {
+                // File not reachable (e.g. opened directly from filesystem) — no problem
+                init();
+            });
+    });
 })();

@@ -29,8 +29,9 @@ Always keep `README.md` up to date when making changes:
 
 ### File structure
 
-- `index.html`, `app.js`, `style.css` — the web app, in the project root (GitHub Pages source).
+- `index.html`, `app.js`, `style.css` — the web app, in the project root.
 - `proxy.py` — local CORS proxy, in the project root. Run with `python3 proxy.py <amp-ip>`.
+- `sources.md` — editable configuration file listing which input sources appear by default per zone. Fetched at runtime by the app; edit this on the NAS to change defaults for all users without touching `app.js`.
 - `PioneerSources/` — reference material from the original Pioneer web interface. Do not modify these files.
 - All app code is vanilla HTML/CSS/JS with no build tools or package managers.
 
