@@ -42,22 +42,36 @@ The protocol should work with Pioneer SC and VSX series receivers from approxima
 
 ## Getting started
 
-### Option 1: Use the local proxy (recommended)
+### Option 1: Run on a NAS or home server (best for sharing)
+
+Run the proxy on an always-on device (Synology NAS, Raspberry Pi, etc.) and
+every phone, tablet, or computer on your network can open the app with no
+installation at all — just a URL.
+
+**Synology NAS setup:**
+1. Install Python 3 from the Synology Package Center
+2. Copy this repository to the NAS (e.g. via File Station to `/volume1/pioneer`)
+3. In DSM → Control Panel → Task Scheduler → Create → Triggered Task → User-defined script:
+   - Trigger: Boot-up
+   - Command: `python3 /volume1/pioneer/proxy.py 192.168.68.60 8080 0.0.0.0`
+4. Run the task once manually to start it
+5. Share `http://<nas-ip>:8080/` with family — works on any phone or browser, no setup needed
+
+### Option 2: Run locally on your own computer
 
 1. Clone or download this repository
 2. Run `python3 proxy.py <amp-ip>` (e.g. `python3 proxy.py 192.168.68.60`)
 3. Open `http://localhost:8080/` in your browser
-4. Enter `localhost:8080` as the proxy address in the settings screen
 
-This sidesteps all CORS issues and works with any modern browser.
+The app auto-connects when opened via HTTP — no settings screen needed.
 
-### Option 2: Open the HTML file directly
+### Option 3: Open the HTML file directly
 
 1. Clone or download this repository
 2. Open `index.html` in your browser
 3. Enter your amplifier's IP address and click Connect
 
-**Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 1 instead.
+**Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 2 instead.
 
 ## Network requirements
 

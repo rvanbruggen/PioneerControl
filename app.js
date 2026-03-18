@@ -607,8 +607,19 @@
             showSetup();
         });
 
-        // Apply saved name and check if we have a saved IP
+        // Apply saved name
         applyName();
+
+        // Auto-connect when served via HTTP (e.g. from NAS or local proxy).
+        // The page origin IS the proxy, so use window.location.host as the
+        // effective amp address — no setup needed for family members.
+        var servedViaHttp = window.location.protocol === 'http:' && window.location.hostname !== '';
+        if (servedViaHttp && !ampDirectIp) {
+            ampDirectIp = window.location.host;
+            ampProxy    = '';
+            ampIp       = ampDirectIp;
+        }
+
         if (ampDirectIp) {
             els.setupOverlay.classList.add('hidden');
             els.app.classList.remove('hidden');

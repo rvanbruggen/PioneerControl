@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Local proxy for Pioneer Amp Control — bypasses browser CORS restrictions.
+Proxy for Pioneer Amp Control — bypasses browser CORS restrictions.
+Serves the app and forwards amp requests. Works locally and on a NAS/server.
 
 Usage:
-    python3 proxy.py <amp-ip> [port]
+    python3 proxy.py <amp-ip> [port] [bind-host]
 
-Example:
-    python3 proxy.py 192.168.68.60 8080
+Examples:
+    python3 proxy.py 192.168.68.60              # local only, port 8080
+    python3 proxy.py 192.168.68.60 8080 0.0.0.0 # all devices on network
 
-Then open http://localhost:8080/ in your browser.
-In the app, enter  localhost:8080  as the amp IP.
+On a Synology NAS or home server, run with 0.0.0.0 so any device on the
+local network can open the app — no installation needed on phones or other
+computers, just open the URL in a browser.
 
-How it works:
-    Requests to /EventHandler.asp and /StatusHandler.asp are forwarded to
-    the real amp. All other requests are served from the project root directory.
-    Because everything is on the same origin (localhost), the browser
-    raises no CORS errors.
+Synology Task Scheduler command:
+    python3 /path/to/proxy.py 192.168.68.60 8080 0.0.0.0
 """
 
 import os
@@ -31,8 +31,9 @@ def main():
         print(__doc__)
         sys.exit(1)
 
-    amp_ip = sys.argv[1]
-    port   = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
+    amp_ip    = sys.argv[1]
+    port      = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
+    bind_host = sys.argv[3] if len(sys.argv) > 3 else 'localhost'
 
     # Serve static files from the project root directory
     docs_dir = os.path.dirname(os.path.abspath(__file__))
@@ -105,13 +106,23 @@ def main():
 
     # ---------------------------------------------------------------------------
 
+    import socket
+    hostname = socket.gethostname()
+    try:
+        local_ip = socket.gethostbyname(hostname)
+    except Exception:
+        local_ip = '(unknown)'
+
     print(f'Serving app from   : {docs_dir}')
     print(f'Forwarding amp at  : http://{amp_ip}/')
-    print(f'Open in browser    : http://localhost:{port}/')
-    print(f'Use as amp IP      : localhost:{port}')
+    if bind_host == '0.0.0.0':
+        print(f'Open on this device: http://localhost:{port}/')
+        print(f'Open on other devices: http://{local_ip}:{port}/')
+    else:
+        print(f'Open in browser    : http://localhost:{port}/')
     print()
 
-    HTTPServer(('localhost', port), Handler).serve_forever()
+    HTTPServer((bind_host, port), Handler).serve_forever()
 
 
 if __name__ == '__main__':
