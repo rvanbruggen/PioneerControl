@@ -6,12 +6,17 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.1.0';
+    const APP_VERSION = '0.2.0';
     const DEFAULT_IP = '192.168.68.60';
+    const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
     const COMMAND_COOLDOWN = 150; // ms between rapid commands
 
-    let ampIp = localStorage.getItem('pioneer_amp_ip') || '';
+    let ampDirectIp = localStorage.getItem('pioneer_amp_direct_ip') || localStorage.getItem('pioneer_amp_ip') || '';
+    let ampProxy    = localStorage.getItem('pioneer_amp_proxy') || '';
+    // Effective request target: proxy if set, otherwise direct amp IP
+    let ampIp = ampProxy || ampDirectIp;
+    let appName = localStorage.getItem('pioneer_app_name') || DEFAULT_APP_NAME;
     let statusTimer = null;
     let connected = false;
     let lastCommandTime = 0;
@@ -65,6 +70,54 @@
         '0f01': 'Multi CH In'
     };
 
+    // ----- All available inputs per zone -----
+    const ZONE_INPUTS = {
+        main: [
+            { cmd: '25FN', name: 'BD' },
+            { cmd: '04FN', name: 'DVD' },
+            { cmd: '06FN', name: 'SAT/CBL' },
+            { cmd: '05FN', name: 'TV' },
+            { cmd: '17FN', name: 'iPod/USB' },
+            { cmd: '01FN', name: 'CD' },
+            { cmd: '02FN', name: 'Tuner' },
+            { cmd: '33FN', name: 'BT Audio' },
+            { cmd: '26FN', name: 'Network' },
+            { cmd: '38FN', name: 'Internet Radio' },
+            { cmd: '44FN', name: 'Media Server' },
+            { cmd: '57FN', name: 'Spotify' },
+            { cmd: '19FN', name: 'HDMI 1' },
+            { cmd: '20FN', name: 'HDMI 2' },
+            { cmd: '21FN', name: 'HDMI 3' },
+            { cmd: '22FN', name: 'HDMI 4' },
+            { cmd: '23FN', name: 'HDMI 5' },
+            { cmd: '24FN', name: 'HDMI 6' },
+            { cmd: '34FN', name: 'HDMI 7' },
+            { cmd: '00FN', name: 'Phono' }
+        ],
+        z2: [
+            { cmd: 'Z2F25', name: 'BD' },
+            { cmd: 'Z2F04', name: 'DVD' },
+            { cmd: 'Z2F06', name: 'SAT/CBL' },
+            { cmd: 'Z2F05', name: 'TV' },
+            { cmd: 'Z2F17', name: 'iPod/USB' },
+            { cmd: 'Z2F01', name: 'CD' },
+            { cmd: 'Z2F02', name: 'Tuner' },
+            { cmd: 'Z2F33', name: 'BT Audio' },
+            { cmd: 'Z2F26', name: 'Network' }
+        ],
+        hd: [
+            { cmd: 'ZEA25', name: 'BD' },
+            { cmd: 'ZEA04', name: 'DVD' },
+            { cmd: 'ZEA06', name: 'SAT/CBL' },
+            { cmd: 'ZEA05', name: 'TV' },
+            { cmd: 'ZEA17', name: 'iPod/USB' },
+            { cmd: 'ZEA01', name: 'CD' },
+            { cmd: 'ZEA02', name: 'Tuner' },
+            { cmd: 'ZEA33', name: 'BT Audio' },
+            { cmd: 'ZEA26', name: 'Network' }
+        ]
+    };
+
     // ----- DOM references -----
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
@@ -72,7 +125,11 @@
     const els = {
         setupOverlay: $('#setup-overlay'),
         app: $('#app'),
+        appTitle: $('#app-title'),
+        setupTitle: $('#setup-title'),
+        nameInput: $('#name-input'),
         ipInput: $('#ip-input'),
+        proxyInput: $('#proxy-input'),
         ipSaveBtn: $('#ip-save-btn'),
         settingsBtn: $('#settings-btn'),
         connectionStatus: $('#connection-status'),
@@ -180,7 +237,13 @@
     function setConnected(state) {
         connected = state;
         els.connectionStatus.className = 'status-dot ' + (state ? 'connected' : 'disconnected');
-        els.connectionStatus.title = state ? 'Connected to ' + ampIp : 'Disconnected';
+        if (state) {
+            els.connectionStatus.title = ampProxy
+                ? 'Connected via proxy ' + ampProxy + ' → amp ' + ampDirectIp
+                : 'Connected directly to ' + ampDirectIp;
+        } else {
+            els.connectionStatus.title = 'Disconnected';
+        }
     }
 
     function updateUI(data) {
@@ -269,6 +332,8 @@
     }
 
     function updateVolume(el, vol, mute) {
+        // Skip update while the user is editing this element
+        if (el._editing) return;
         if (mute === 1) {
             el.textContent = 'MUTED';
         } else if (vol === 0 || vol === '000') {
@@ -277,6 +342,58 @@
             var db = (parseInt(vol, 10) - 161) / 2;
             el.textContent = db + ' dB';
         }
+    }
+
+    var VOL_SUFFIX = { main: 'VL', z2: 'ZV', hd: 'HZV' };
+
+    function setVolumeByDb(zone, db) {
+        var suffix = VOL_SUFFIX[zone];
+        if (!suffix) return;
+        var clamped = Math.max(-80, Math.min(12, db));
+        var volCode = Math.round(clamped * 2 + 161);
+        volCode = Math.max(0, Math.min(185, volCode));
+        sendCommand(String(volCode).padStart(3, '0') + suffix);
+    }
+
+    function makeVolumeEditable(span, zone) {
+        span.classList.add('vol-editable');
+        span.title = 'Click to set volume directly';
+
+        span.addEventListener('click', function () {
+            if (span._editing) return;
+            span._editing = true;
+
+            // Pull numeric part from current display (e.g. "-30 dB" → -30)
+            var match = span.textContent.match(/(-?\d+\.?\d*)/);
+            var currentDb = match ? parseFloat(match[1]) : 0;
+
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.5';
+            input.min = '-80';
+            input.max = '12';
+            input.value = currentDb;
+            input.className = 'volume-edit-input';
+
+            span.parentNode.insertBefore(input, span);
+            span.style.display = 'none';
+            input.focus();
+            input.select();
+
+            function commit() {
+                var val = parseFloat(input.value);
+                if (!isNaN(val)) setVolumeByDb(zone, val);
+                input.remove();
+                span.style.display = '';
+                span._editing = false;
+            }
+
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+                if (e.key === 'Escape') { input.remove(); span.style.display = ''; span._editing = false; }
+            });
+        });
     }
 
     function updateMuteButton(btn, mute) {
@@ -313,12 +430,86 @@
         card.classList.toggle('collapsed');
     }
 
+    function loadEnabledInputs(zone) {
+        var stored = localStorage.getItem('pioneer_inputs_' + zone);
+        if (stored) {
+            try { return JSON.parse(stored); } catch (e) {}
+        }
+        return ZONE_INPUTS[zone].map(function (i) { return i.cmd; });
+    }
+
+    function renderInputButtons(zone) {
+        var ids = { main: 'main-inputs', z2: 'z2-inputs', hd: 'hd-inputs' };
+        var container = $('#' + ids[zone]);
+        if (!container) return;
+        var enabled = loadEnabledInputs(zone);
+        container.innerHTML = '';
+        ZONE_INPUTS[zone].forEach(function (input) {
+            if (enabled.indexOf(input.cmd) === -1) return;
+            var btn = document.createElement('button');
+            btn.className = 'btn btn-input';
+            btn.dataset.cmd = input.cmd;
+            btn.textContent = input.name;
+            btn.addEventListener('click', function () { sendCommand(input.cmd); });
+            container.appendChild(btn);
+        });
+    }
+
+    function renderInputCheckboxes(zone, containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var enabled = loadEnabledInputs(zone);
+        container.innerHTML = '';
+        ZONE_INPUTS[zone].forEach(function (input) {
+            var label = document.createElement('label');
+            label.className = 'input-checkbox';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = input.cmd;
+            cb.checked = enabled.indexOf(input.cmd) !== -1;
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode('\u00a0' + input.name));
+            container.appendChild(label);
+        });
+    }
+
+    function saveEnabledInputs(zone, containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var checked = [];
+        container.querySelectorAll('input[type=checkbox]:checked').forEach(function (cb) {
+            checked.push(cb.value);
+        });
+        localStorage.setItem('pioneer_inputs_' + zone, JSON.stringify(checked));
+    }
+
+    function applyName() {
+        document.title = appName;
+        els.appTitle.textContent = appName;
+        els.setupTitle.textContent = appName;
+    }
+
     function connectToAmp() {
         var ip = els.ipInput.value.trim();
         if (!ip) return;
 
-        ampIp = ip;
-        localStorage.setItem('pioneer_amp_ip', ampIp);
+        ampDirectIp = ip;
+        ampProxy    = els.proxyInput.value.trim();
+        ampIp       = ampProxy || ampDirectIp;
+        localStorage.setItem('pioneer_amp_direct_ip', ampDirectIp);
+        localStorage.setItem('pioneer_amp_proxy',     ampProxy);
+
+        var name = els.nameInput.value.trim();
+        appName = name || DEFAULT_APP_NAME;
+        localStorage.setItem('pioneer_app_name', appName);
+        applyName();
+
+        saveEnabledInputs('main', 'main-input-checkboxes');
+        saveEnabledInputs('z2',   'z2-input-checkboxes');
+        saveEnabledInputs('hd',   'hd-input-checkboxes');
+        renderInputButtons('main');
+        renderInputButtons('z2');
+        renderInputButtons('hd');
 
         els.setupOverlay.classList.add('hidden');
         els.app.classList.remove('hidden');
@@ -328,7 +519,12 @@
 
     function showSetup() {
         stopPolling();
-        els.ipInput.value = ampIp || DEFAULT_IP;
+        els.nameInput.value = appName;
+        els.ipInput.value = ampDirectIp || DEFAULT_IP;
+        els.proxyInput.value = ampProxy;
+        renderInputCheckboxes('main', 'main-input-checkboxes');
+        renderInputCheckboxes('z2',   'z2-input-checkboxes');
+        renderInputCheckboxes('hd',   'hd-input-checkboxes');
         els.setupOverlay.classList.remove('hidden');
         els.app.classList.add('hidden');
     }
@@ -363,14 +559,15 @@
             }
         });
 
-        // Input select buttons
-        $$('.btn-input').forEach(function (btn) {
-            if (btn.dataset.cmd) {
-                btn.addEventListener('click', function () {
-                    sendCommand(btn.dataset.cmd);
-                });
-            }
-        });
+        // Editable volume displays
+        makeVolumeEditable(els.mainVolume, 'main');
+        makeVolumeEditable(els.z2Volume,   'z2');
+        makeVolumeEditable(els.hdVolume,   'hd');
+
+        // Input select buttons (generated dynamically)
+        renderInputButtons('main');
+        renderInputButtons('z2');
+        renderInputButtons('hd');
 
         // Collapse toggles for zone 2 and HD zone
         $$('.btn-collapse').forEach(function (btn) {
@@ -401,8 +598,18 @@
             btn.addEventListener('touchcancel', function () { clearInterval(intervalId); });
         });
 
-        // Check if we have a saved IP
-        if (ampIp) {
+        // Disconnect button
+        $('#disconnect-btn').addEventListener('click', function () {
+            sendCommand('KOF');
+            sendCommand('CLRLC');
+            stopPolling();
+            setConnected(false);
+            showSetup();
+        });
+
+        // Apply saved name and check if we have a saved IP
+        applyName();
+        if (ampDirectIp) {
             els.setupOverlay.classList.add('hidden');
             els.app.classList.remove('hidden');
             startPolling();

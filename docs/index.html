@@ -11,22 +11,56 @@
     <!-- Setup overlay -->
     <div id="setup-overlay" class="overlay hidden">
         <div class="overlay-content">
-            <h2>Pioneer Amp Control</h2>
-            <p>Enter your amplifier's IP address on your local network.</p>
-            <div class="ip-input-group">
-                <input type="text" id="ip-input" placeholder="e.g. 192.168.1.100" value="192.168.68.60" autocomplete="off" inputmode="url">
-                <button id="ip-save-btn" class="btn btn-primary">Connect</button>
+            <h2 id="setup-title">Rix Pioneer Amp Control</h2>
+
+            <div class="settings-field">
+                <label for="name-input">App name</label>
+                <input type="text" id="name-input" placeholder="e.g. Living Room Amp" autocomplete="off">
             </div>
-            <p class="hint">The amplifier must be on the same network as this device.</p>
+
+            <div class="settings-field">
+                <label for="ip-input">Amplifier IP address</label>
+                <input type="text" id="ip-input" placeholder="e.g. 192.168.68.60" autocomplete="off" inputmode="url">
+                <p class="hint">The IP address of the Pioneer amplifier on your local network.</p>
+            </div>
+
+            <div class="settings-field">
+                <label for="proxy-input">Proxy address <span class="label-optional">(optional)</span></label>
+                <input type="text" id="proxy-input" placeholder="e.g. localhost:8080" autocomplete="off" inputmode="url">
+                <p class="hint">
+                    If your browser blocks direct requests (CORS), run
+                    <code>python3 proxy.py &lt;amp-ip&gt;</code> and enter
+                    <code>localhost:8080</code> here. Leave empty to connect directly.
+                </p>
+            </div>
+
+            <div class="settings-field">
+                <label>Available inputs</label>
+                <details class="input-config">
+                    <summary>Main Zone</summary>
+                    <div id="main-input-checkboxes" class="input-checkbox-grid"></div>
+                </details>
+                <details class="input-config">
+                    <summary>Zone 2</summary>
+                    <div id="z2-input-checkboxes" class="input-checkbox-grid"></div>
+                </details>
+                <details class="input-config">
+                    <summary>HD Zone</summary>
+                    <div id="hd-input-checkboxes" class="input-checkbox-grid"></div>
+                </details>
+            </div>
+
+            <button id="ip-save-btn" class="btn btn-primary btn-full">Connect</button>
         </div>
     </div>
 
     <!-- Main app -->
     <div id="app" class="hidden">
         <header>
-            <h1>Pioneer Amp Control</h1>
+            <h1 id="app-title">Rix Pioneer Amp Control</h1>
             <div class="header-controls">
                 <span id="connection-status" class="status-dot disconnected" title="Disconnected"></span>
+                <button id="disconnect-btn" class="btn btn-icon" title="Disconnect">&#10005;</button>
                 <button id="settings-btn" class="btn btn-icon" title="Settings">&#9881;</button>
             </div>
         </header>
@@ -49,28 +83,7 @@
                     </div>
                     <div class="input-select">
                         <label>Input</label>
-                        <div class="input-grid" id="main-inputs">
-                            <button class="btn btn-input" data-cmd="25FN">BD</button>
-                            <button class="btn btn-input" data-cmd="04FN">DVD</button>
-                            <button class="btn btn-input" data-cmd="06FN">SAT/CBL</button>
-                            <button class="btn btn-input" data-cmd="05FN">TV</button>
-                            <button class="btn btn-input" data-cmd="17FN">iPod/USB</button>
-                            <button class="btn btn-input" data-cmd="01FN">CD</button>
-                            <button class="btn btn-input" data-cmd="02FN">Tuner</button>
-                            <button class="btn btn-input" data-cmd="33FN">BT Audio</button>
-                            <button class="btn btn-input" data-cmd="26FN">Network</button>
-                            <button class="btn btn-input" data-cmd="38FN">Internet Radio</button>
-                            <button class="btn btn-input" data-cmd="44FN">Media Server</button>
-                            <button class="btn btn-input" data-cmd="57FN">Spotify</button>
-                            <button class="btn btn-input" data-cmd="19FN">HDMI 1</button>
-                            <button class="btn btn-input" data-cmd="20FN">HDMI 2</button>
-                            <button class="btn btn-input" data-cmd="21FN">HDMI 3</button>
-                            <button class="btn btn-input" data-cmd="22FN">HDMI 4</button>
-                            <button class="btn btn-input" data-cmd="23FN">HDMI 5</button>
-                            <button class="btn btn-input" data-cmd="24FN">HDMI 6</button>
-                            <button class="btn btn-input" data-cmd="34FN">HDMI 7</button>
-                            <button class="btn btn-input" data-cmd="00FN">Phono</button>
-                        </div>
+                        <div class="input-grid" id="main-inputs"></div>
                     </div>
                     <div class="listening-mode">
                         <label>Listening Mode</label>
@@ -99,17 +112,7 @@
                     </div>
                     <div class="input-select">
                         <label>Input</label>
-                        <div class="input-grid" id="z2-inputs">
-                            <button class="btn btn-input" data-cmd="Z2F25">BD</button>
-                            <button class="btn btn-input" data-cmd="Z2F04">DVD</button>
-                            <button class="btn btn-input" data-cmd="Z2F06">SAT/CBL</button>
-                            <button class="btn btn-input" data-cmd="Z2F05">TV</button>
-                            <button class="btn btn-input" data-cmd="Z2F17">iPod/USB</button>
-                            <button class="btn btn-input" data-cmd="Z2F01">CD</button>
-                            <button class="btn btn-input" data-cmd="Z2F02">Tuner</button>
-                            <button class="btn btn-input" data-cmd="Z2F33">BT Audio</button>
-                            <button class="btn btn-input" data-cmd="Z2F26">Network</button>
-                        </div>
+                        <div class="input-grid" id="z2-inputs"></div>
                     </div>
                 </div>
             </section>
@@ -134,17 +137,7 @@
                     </div>
                     <div class="input-select">
                         <label>Input</label>
-                        <div class="input-grid" id="hd-inputs">
-                            <button class="btn btn-input" data-cmd="ZEA25">BD</button>
-                            <button class="btn btn-input" data-cmd="ZEA04">DVD</button>
-                            <button class="btn btn-input" data-cmd="ZEA06">SAT/CBL</button>
-                            <button class="btn btn-input" data-cmd="ZEA05">TV</button>
-                            <button class="btn btn-input" data-cmd="ZEA17">iPod/USB</button>
-                            <button class="btn btn-input" data-cmd="ZEA01">CD</button>
-                            <button class="btn btn-input" data-cmd="ZEA02">Tuner</button>
-                            <button class="btn btn-input" data-cmd="ZEA33">BT Audio</button>
-                            <button class="btn btn-input" data-cmd="ZEA26">Network</button>
-                        </div>
+                        <div class="input-grid" id="hd-inputs"></div>
                     </div>
                 </div>
             </section>

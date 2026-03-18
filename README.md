@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.1.0**
+**Current version: 0.2.0**
 
 ## Why this project?
 
@@ -12,12 +12,14 @@ Pioneer's official Android app for controlling their network-connected amplifier
 
 - **Multi-zone control** — Main Zone, Zone 2, and HD Zone
 - **Power on/off** per zone
-- **Volume control** — up, down, mute per zone with long-press for continuous adjustment
-- **Input source selection** — BD, DVD, SAT/CBL, TV, iPod/USB, CD, Tuner, BT Audio, Network, Internet Radio, Media Server, Spotify, HDMI 1-7, Phono
+- **Volume control** — up/down/mute per zone with long-press, plus direct dB entry by clicking the volume display
+- **Configurable input sources** — choose which inputs appear per zone in settings
 - **Live status display** — real-time power state, volume level (in dB), active input, and listening mode
+- **Configurable app name** — rename the app to anything you like
+- **CORS proxy** — `proxy.py` sidesteps browser CORS restrictions for local use
 - **Responsive design** — optimized for phones, tablets, and desktops
 - **Dark theme** — easy on the eyes for home theater use
-- **No installation required** — just open a URL
+- **No build step** — vanilla HTML/CSS/JS, just open a URL
 
 ## How it works
 
@@ -40,15 +42,24 @@ The protocol should work with Pioneer SC and VSX series receivers from approxima
 
 ## Getting started
 
-### Option 1: Open the HTML file directly
+### Option 1: Use the local proxy (recommended)
+
+1. Clone or download this repository
+2. Run `python3 proxy.py <amp-ip>` (e.g. `python3 proxy.py 192.168.68.60`)
+3. Open `http://localhost:8080/` in your browser
+4. Enter `localhost:8080` as the proxy address in the settings screen
+
+This sidesteps all CORS issues and works with any modern browser.
+
+### Option 2: Open the HTML file directly
 
 1. Clone or download this repository
 2. Open `docs/index.html` in your browser
-3. Enter your amplifier's IP address (default: `192.168.68.60`) and click Connect
+3. Enter your amplifier's IP address and click Connect
 
-This is the simplest approach and avoids any mixed-content issues.
+May be blocked by CORS in some browsers; use the proxy if you see errors.
 
-### Option 2: GitHub Pages
+### Option 3: GitHub Pages
 
 1. In your GitHub repository settings, enable GitHub Pages with source set to the `docs/` folder
 2. Open the published URL from any device on your local network
@@ -74,9 +85,15 @@ The Pioneer amplifier has a built-in web server. You may be able to place the fi
 | `PO` / `PF` | Main zone power on / off |
 | `APO` / `APF` | Zone 2 power on / off |
 | `ZEA` / `ZEF` | HD Zone power on / off |
+| `PO` / `PF` | Main zone power on / off |
+| `APO` / `APF` | Zone 2 power on / off |
+| `ZEA` / `ZEF` | HD Zone power on / off |
 | `VU` / `VD` | Main zone volume up / down |
 | `ZU` / `ZD` | Zone 2 volume up / down |
 | `HZU` / `HZD` | HD Zone volume up / down |
+| `###VL` | Set main zone volume directly (3-digit code, dB = (code−161)/2) |
+| `###ZV` | Set Zone 2 volume directly |
+| `###HZV` | Set HD Zone volume directly |
 | `MZ` | Main zone mute toggle |
 | `Z2MZ` | Zone 2 mute toggle |
 | `HZMUT` | HD Zone mute toggle |
@@ -138,6 +155,7 @@ RixPioneerControl/
 │   ├── app.js             # Application logic & network layer
 │   └── style.css          # Responsive styles
 ├── InteractiveOperatingGuide/  # Original Pioneer web interface (reference)
+├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
 ├── CLAUDE.md              # AI coding assistant instructions
 ├── LICENSE                # MIT License
 └── README.md              # This file
@@ -145,6 +163,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.2.0** — CORS proxy (`proxy.py`) for browsers that block direct HTTP requests. Configurable app name. Separate amp IP / proxy address fields in settings. Per-zone configurable input sources (checkboxes in settings). Direct volume entry by clicking the dB display. Disconnect button.
 - **0.1.0** — Initial release. Multi-zone control (power, volume, mute, input select), live status polling, responsive dark-theme UI.
 
 ## License
