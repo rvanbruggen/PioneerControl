@@ -54,21 +54,10 @@ This sidesteps all CORS issues and works with any modern browser.
 ### Option 2: Open the HTML file directly
 
 1. Clone or download this repository
-2. Open `docs/index.html` in your browser
+2. Open `index.html` in your browser
 3. Enter your amplifier's IP address and click Connect
 
-May be blocked by CORS in some browsers; use the proxy if you see errors.
-
-### Option 3: GitHub Pages
-
-1. In your GitHub repository settings, enable GitHub Pages with source set to the `docs/` folder
-2. Open the published URL from any device on your local network
-
-**Note:** If GitHub Pages serves over HTTPS, your browser may block HTTP requests to the amplifier (mixed content). In that case, use Option 1, or configure your browser to allow mixed content for the page.
-
-### Option 3: Serve from the amplifier
-
-The Pioneer amplifier has a built-in web server. You may be able to place the files directly on the amplifier if it supports custom pages, though this has not been tested.
+**Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 1 instead.
 
 ## Network requirements
 
