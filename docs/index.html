@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pioneer Amp Control</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
+</head>
+<body>
+    <!-- Setup overlay -->
+    <div id="setup-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>Pioneer Amp Control</h2>
+            <p>Enter your amplifier's IP address on your local network.</p>
+            <div class="ip-input-group">
+                <input type="text" id="ip-input" placeholder="e.g. 192.168.1.100" value="192.168.68.60" autocomplete="off" inputmode="url">
+                <button id="ip-save-btn" class="btn btn-primary">Connect</button>
+            </div>
+            <p class="hint">The amplifier must be on the same network as this device.</p>
+        </div>
+    </div>
+
+    <!-- Main app -->
+    <div id="app" class="hidden">
+        <header>
+            <h1>Pioneer Amp Control</h1>
+            <div class="header-controls">
+                <span id="connection-status" class="status-dot disconnected" title="Disconnected"></span>
+                <button id="settings-btn" class="btn btn-icon" title="Settings">&#9881;</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Main Zone -->
+            <section class="zone-card" id="main-zone">
+                <div class="zone-header">
+                    <h2>Main Zone</h2>
+                    <button class="btn btn-power" id="main-power" data-cmd-on="PO" data-cmd-off="PF" title="Power">&#9211;</button>
+                </div>
+                <div class="zone-body">
+                    <div class="volume-control">
+                        <button class="btn btn-round btn-vol" id="main-vol-down" data-cmd="VD">&#8722;</button>
+                        <div class="volume-display">
+                            <span id="main-volume">-- dB</span>
+                            <button class="btn btn-mute" id="main-mute" data-cmd="MZ">MUTE</button>
+                        </div>
+                        <button class="btn btn-round btn-vol" id="main-vol-up" data-cmd="VU">&#43;</button>
+                    </div>
+                    <div class="input-select">
+                        <label>Input</label>
+                        <div class="input-grid" id="main-inputs">
+                            <button class="btn btn-input" data-cmd="25FN">BD</button>
+                            <button class="btn btn-input" data-cmd="04FN">DVD</button>
+                            <button class="btn btn-input" data-cmd="06FN">SAT/CBL</button>
+                            <button class="btn btn-input" data-cmd="05FN">TV</button>
+                            <button class="btn btn-input" data-cmd="17FN">iPod/USB</button>
+                            <button class="btn btn-input" data-cmd="01FN">CD</button>
+                            <button class="btn btn-input" data-cmd="02FN">Tuner</button>
+                            <button class="btn btn-input" data-cmd="33FN">BT Audio</button>
+                            <button class="btn btn-input" data-cmd="26FN">Network</button>
+                            <button class="btn btn-input" data-cmd="38FN">Internet Radio</button>
+                            <button class="btn btn-input" data-cmd="44FN">Media Server</button>
+                            <button class="btn btn-input" data-cmd="57FN">Spotify</button>
+                            <button class="btn btn-input" data-cmd="19FN">HDMI 1</button>
+                            <button class="btn btn-input" data-cmd="20FN">HDMI 2</button>
+                            <button class="btn btn-input" data-cmd="21FN">HDMI 3</button>
+                            <button class="btn btn-input" data-cmd="22FN">HDMI 4</button>
+                            <button class="btn btn-input" data-cmd="23FN">HDMI 5</button>
+                            <button class="btn btn-input" data-cmd="24FN">HDMI 6</button>
+                            <button class="btn btn-input" data-cmd="34FN">HDMI 7</button>
+                            <button class="btn btn-input" data-cmd="00FN">Phono</button>
+                        </div>
+                    </div>
+                    <div class="listening-mode">
+                        <label>Listening Mode</label>
+                        <span id="main-listening-mode">--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Zone 2 -->
+            <section class="zone-card collapsed" id="zone2">
+                <div class="zone-header">
+                    <h2>Zone 2</h2>
+                    <div class="zone-header-controls">
+                        <button class="btn btn-collapse" title="Expand/Collapse">&#9660;</button>
+                        <button class="btn btn-power" id="z2-power" data-cmd-on="APO" data-cmd-off="APF" title="Power">&#9211;</button>
+                    </div>
+                </div>
+                <div class="zone-body">
+                    <div class="volume-control">
+                        <button class="btn btn-round btn-vol" data-cmd="ZD">&#8722;</button>
+                        <div class="volume-display">
+                            <span id="z2-volume">-- dB</span>
+                            <button class="btn btn-mute" data-cmd="Z2MZ">MUTE</button>
+                        </div>
+                        <button class="btn btn-round btn-vol" data-cmd="ZU">&#43;</button>
+                    </div>
+                    <div class="input-select">
+                        <label>Input</label>
+                        <div class="input-grid" id="z2-inputs">
+                            <button class="btn btn-input" data-cmd="Z2F25">BD</button>
+                            <button class="btn btn-input" data-cmd="Z2F04">DVD</button>
+                            <button class="btn btn-input" data-cmd="Z2F06">SAT/CBL</button>
+                            <button class="btn btn-input" data-cmd="Z2F05">TV</button>
+                            <button class="btn btn-input" data-cmd="Z2F17">iPod/USB</button>
+                            <button class="btn btn-input" data-cmd="Z2F01">CD</button>
+                            <button class="btn btn-input" data-cmd="Z2F02">Tuner</button>
+                            <button class="btn btn-input" data-cmd="Z2F33">BT Audio</button>
+                            <button class="btn btn-input" data-cmd="Z2F26">Network</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HD Zone -->
+            <section class="zone-card collapsed" id="hdzone">
+                <div class="zone-header">
+                    <h2>HD Zone</h2>
+                    <div class="zone-header-controls">
+                        <button class="btn btn-collapse" title="Expand/Collapse">&#9660;</button>
+                        <button class="btn btn-power" id="hd-power" data-cmd-on="ZEA" data-cmd-off="ZEF" title="Power">&#9211;</button>
+                    </div>
+                </div>
+                <div class="zone-body">
+                    <div class="volume-control" id="hd-vol-section">
+                        <button class="btn btn-round btn-vol" data-cmd="HZU">&#8722;</button>
+                        <div class="volume-display">
+                            <span id="hd-volume">-- dB</span>
+                            <button class="btn btn-mute" data-cmd="HZMUT">MUTE</button>
+                        </div>
+                        <button class="btn btn-round btn-vol" data-cmd="HZD">&#43;</button>
+                    </div>
+                    <div class="input-select">
+                        <label>Input</label>
+                        <div class="input-grid" id="hd-inputs">
+                            <button class="btn btn-input" data-cmd="ZEA25">BD</button>
+                            <button class="btn btn-input" data-cmd="ZEA04">DVD</button>
+                            <button class="btn btn-input" data-cmd="ZEA06">SAT/CBL</button>
+                            <button class="btn btn-input" data-cmd="ZEA05">TV</button>
+                            <button class="btn btn-input" data-cmd="ZEA17">iPod/USB</button>
+                            <button class="btn btn-input" data-cmd="ZEA01">CD</button>
+                            <button class="btn btn-input" data-cmd="ZEA02">Tuner</button>
+                            <button class="btn btn-input" data-cmd="ZEA33">BT Audio</button>
+                            <button class="btn btn-input" data-cmd="ZEA26">Network</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
