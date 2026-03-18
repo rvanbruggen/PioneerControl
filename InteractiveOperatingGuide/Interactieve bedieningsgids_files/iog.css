@@ -1,0 +1,1035 @@
+﻿html,body,div,span,h1,h2,h3,h4,h5,h6,p,pre,a,font,img,var,dl,dt,dd,ol,ul,li,fieldset,form,label,table,tbody,tfoot,thead,tr,th,td{
+margin:0; padding:0; border:0; outline:0; font-weight:normal; font-style:inherit; font-size:100%;list-style-type: none;
+}
+
+html , body{
+	height:100%;
+}
+html{
+	background-color: #606266;
+}
+body{
+	font-size: 14px;
+	color: #28282c;
+	font-family:"ＭＳゴシック", Arial,Osaka,sans-serif;
+	-webkit-text-size-adjust: none;
+}
+input , select{
+	font-size: 0.95em;
+}
+input{
+	padding:0 10px;
+}
+li{
+	list-style: none;
+}
+.clearfix:after {
+	clear: both;
+	content: ".";
+	display: block;
+	height: 0px;
+	visibility: hidden;
+}
+.clearfix {
+	min-height: 1px;
+}
+
+/*カラムレイアウト-----------------------------------------
+---------------------------------------------------------*/
+.wrapp{
+	position: relative;
+	background: url("../i/bg_body.png") repeat-y scroll right top #D8D8DC;
+	width:800px;
+	margin: 0px auto;
+	visibility: hidden;
+}
+#header{
+	color:#48484c;
+	min-height: 30px;
+	line-height: 2em;
+    border-bottom: 3px double #252525;
+}
+#header , #layoutBody ,  #footer , #scrollblank{
+    /*background: url("../i/bg_body.png") repeat-y right top #D8D8DC;*/
+    padding:0 10px ;
+}
+#header_left{
+	float: left;
+	font-size: 1.45em;
+	font-weight: bold;
+}
+#header_right{
+	text-align: right;
+}
+#header_right select{
+	margin-right: 5px;
+}
+#layoutBody{
+	position:relative;
+	/*padding-bottom: 50px;*//*★wrappをmin-height:100%するとき*/
+	min-height: 738px;
+}
+
+#layoutBody *{/*Android Chomeのテキスト自動拡大バグ回避*/
+	max-height: 999999px;
+}
+#leftMenu{
+	position:fixed;
+	background-color: transparent;
+	width: 177px;
+	height:90%;
+	color: #ffffff;
+	top:35px;
+	margin:0 0 0 3px;
+}
+#mainContents{
+	float: right;
+    width: 560px;
+    padding-bottom: 30px;
+    padding-top:20px;
+	/*line-break:strict; /*禁則処理*/
+}
+/*右カラムレイアウト---------------------------------------
+---------------------------------------------------------*/
+.leftCont {
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0);
+    background-repeat:no-repeat;
+    color: #FFFFFF;
+    padding-top: 20px;
+}
+.leftCont:after {
+	clear: both;
+	content: ".";
+	display: block;
+	height: 0px;
+	visibility: hidden;
+}
+.rightCont{
+	padding-top:30px;
+}
+.note{
+	padding-top: 5px;
+	font-size: 0.9em;
+	min-height:2.4em;
+}
+.textArea .note .inimg img{
+	height: 1em;
+    vertical-align: text-top;
+}
+.lastOp table{
+	background:#3fae49;
+}
+.textArea{
+	background: #c0e0f8;
+	min-height: 60px;
+	border:1px solid #1860b0;
+	line-height: 1.1;
+	padding: 2px 5px 8px;
+}
+.textArea.show{
+	display:block;
+}
+.opArea > *{
+	font-weight:bold;
+	font-size: 1.4em;
+}
+.opArea p{
+	display:none;
+}
+.note p.show , .opArea p.show{
+	display: inline-block;
+}
+.textArea p{
+	display: inline-block;
+	vertical-align:middle;
+}
+.note p, .opArea p{
+	display:none;
+}
+.textArea .var img , .textArea .inimg img , .textArea .specialCharactor img{
+	height: 0.8em;
+}
+.func_zone{
+	border-bottom: 1px solid #9FA2A9;
+	padding-bottom: 5px;
+	color:#1860b0;
+}
+.statusArea{
+	display:none;
+	padding: 0 1px;
+}
+
+/*フッタースタイル----------------------------------------
+---------------------------------------------------------*/
+#footer{
+	clear:both;
+    border-top: 3px double #252525;
+	min-height:30px;
+	text-align: center;
+	color:#48484c;
+	margin: 0 auto;
+	bottom: 0;
+    /*position: absolute;*//*★wrappにmin-height:100%するとき*/
+    padding: 0;
+    width: 100%;
+}
+#footer_left{
+	width: 110px;
+	float: left;
+}
+#footer_right{
+	float: right;
+	font-family:MS Sans Serif, sans-serif;
+	color: #3f3f3f;
+	font-size: 0.8em;
+	line-height: 30px;
+	text-decoration: none;
+	letter-spacing: 1px;
+	text-align: right;
+	padding-right: 10px;
+}
+
+/*テーブルスタイル----------------------------------------
+---------------------------------------------------------*/
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+table td {
+	vertical-align: middle;
+}
+.zone{
+	padding-top:10px;
+}
+.zoneArea{
+	border:1px solid #8090a0;
+	background: #C8C8D0;
+	padding: 5px 10px 5px 0;
+}
+.zoneArea td{
+	padding: 5px 15px 5px 0;
+	background: url("../i/tableborder.png") repeat-x left bottom;
+	border-bottom: 3px solid #C8C8D0;
+}
+tbody th{
+	text-align: left;
+}
+.zoneArea td:first-child{
+	width: 300px;
+	padding: 5px 15px 5px 10px;
+}
+.zoneArea td:first-child p{
+	word-wrap:break-word;
+	width: 300px;
+	padding: 0;
+}
+tr.no_bg td{
+	background:none;
+}
+.zoneArea td p{
+	padding-left: 10px;
+}
+
+/*リモコン全体スタイル-------------------------------
+---------------------------------------------------------*/
+.rc , .hoverArea div , .thisArea div{
+	width:160px;/*リモコン画像の横幅を指定 デフォルト160px */
+	background-size:100% auto; 
+}
+.rc{
+	background-image: url("../i/rc.png");
+	background-repeat: no-repeat;
+	position: relative;
+	z-index:1000;
+	margin: 0 auto;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+}
+.rc.ja{
+	background-image: url("../i/rc_ja.png");
+}
+.rc.light{
+	background-image: url("../i/rc_light.png");
+}
+.rc.ja.light{
+	background-image: url("../i/rc_light_ja.png");
+}
+.hoverArea{
+    position: absolute;
+    top: 0;
+    z-index:0;
+    height:100%;
+}
+.hoverArea div{
+    display:none;
+}
+.linkArea{
+    position: absolute;
+    top: 0;
+    z-index:1;
+    height: 100%;
+	overflow:hidden;
+}
+.linkArea a{
+    display:block;
+    background:url("../i/s.gif") no-repeat;/*ここを指定しないとIE8で高さが効かない*/
+    border:0;
+}
+a.c1{
+	height: 6.8%;
+}
+.c2,
+.c4_2,
+.c5_1,
+.c5_3,
+.c6,
+.c8{
+/*	height: 30px;*/
+	height: 4.5%;
+}
+a.c3{
+	/*height: 82px;*/
+	height: 12.5%;
+}
+a.c4_1{
+	/*height: 60px;*/
+	height: 8.6%;
+}
+a.c4_2{
+	float: right;
+    /*width: 50px;*/
+    width: 37%;
+}
+a.c5_1{
+	float: left;
+    /*width: 90px;*/
+    width: 63%;
+}
+a.c5_2{
+	/*height: 125px;*/
+	height: 18%;
+	clear:both;
+}
+a.c5_3{
+	float: right;
+	/*width: 40px;*/
+	width: 28%;
+}
+a.c6{
+	float: left;
+	/*width:100px;*/
+	width: 72%;
+}
+a.c7{
+	clear:both;
+	/*height: 155px;*/
+	height: 22.7%;
+}
+.linkArea{
+	width:100%;
+}
+.thisArea div , .hoverArea div{
+	background-repeat: no-repeat;
+	position: absolute;
+	top: 0;
+	height: 100%;
+	font-size: 0;
+	overflow:hidden;
+}
+.thisArea div{
+	display: none;
+}
+.thisArea div.current{
+	display: block;
+}
+.this_c1{
+	background-image:url("../i/rc_this_c1.png");
+}
+.this_c2{
+	background-image:url("../i/rc_this_c2.png");
+}
+.this_c3{
+	background-image:url("../i/rc_this_c3.png");
+}
+.this_c4{
+	background-image:url("../i/rc_this_c4.png");
+}
+.this_c5{
+	background-image:url("../i/rc_this_c5.png");
+}
+.this_c6{
+	background-image:url("../i/rc_this_c6.png");
+}
+.this_c7{
+	background-image:url("../i/rc_this_c7.png");
+}
+.this_c8{
+	background-image:url("../i/rc_this_c8.png");
+}
+
+.hover_c1{
+	background-image:url("../i/rc_hover_c1.png");
+}
+.hover_c2{
+	background-image:url("../i/rc_hover_c2.png");
+}
+.hover_c3{
+	background-image:url("../i/rc_hover_c3.png");
+}
+.hover_c4{
+	background-image:url("../i/rc_hover_c4.png");
+}
+.hover_c5{
+	background-image:url("../i/rc_hover_c5.png");
+}
+.hover_c6{
+	background-image:url("../i/rc_hover_c6.png");
+}
+.hover_c7{
+	background-image:url("../i/rc_hover_c7.png");
+}
+.hover_c8{
+	background-image:url("../i/rc_hover_c8.png");
+}
+.remocon img{
+	width: 100%;
+}
+
+
+.rcBlock{
+	width:268px;/*リモコンブロック画像の横幅 デフォルト268px*/
+	margin:0 auto;
+	position: relative;
+}
+.rcBlock div img{
+	width:100%;
+	display: block;
+}
+.blkLink{
+	background-repeat: no-repeat;
+	background-size:100% auto; 
+}
+.blkLink div{
+	position: absolute;
+}
+.rcBlock div p{
+	display:block;
+    background:url("../i/s.gif") no-repeat;/*背景を指定しないとIEでheightが効かない*/
+	background-size:100% auto;
+    height: 100%;
+	overflow:hidden;
+	-webkit-tap-highlight-color:rgba(0, 0, 0, 0);
+	font-size:0;
+	cursor: pointer;
+}
+.rcBlock div .current{
+	background-position: 0 0;
+}
+.rcBlock .hover.active{
+	background-position: 0 100%;
+}
+.blkLink div .hover , .blkLink div .current{
+	background-image:url("../i/brc_hover_rectangle.png");
+}
+.blkLink #vol_u .hover , .blkLink #vol_u .current ,
+.blkLink #vol_d .hover , .blkLink #vol_d .current{
+	background-image:url("../i/brc_hover_rectangle_large.png");
+}
+.blkLink #play .hover , .blkLink #play .current{
+	background-image:url("../i/brc_hover_line.png");
+}
+.blkLink #standby .hover , .blkLink #source .hover , .blkLink #enter .hover ,
+.blkLink #standby .current , .blkLink #source .current , .blkLink #enter .current{
+	background-image:url("../i/brc_hover_circle.png");
+}
+.blkLink #audioP .hover , .blkLink #videoP .hover , .blkLink #homeMenu .hover , .blkLink #return .hover ,
+.blkLink #audioP .current , .blkLink #videoP .current , .blkLink #homeMenu .current , .blkLink #return .current{
+	background-image:url("../i/brc_hover_square.png");
+}
+.blkLink #arrowTop .hover , .blkLink #arrowTop .current {
+	background-image:url("../i/brc_hover_warp_top.png");
+}
+.blkLink #arrowBottom .hover , .blkLink #arrowBottom .current{
+	background-image:url("../i/brc_hover_warp_bottom.png");
+}
+.blkLink #arrowLeft .hover , .blkLink #arrowLeft .current{
+	background-image:url("../i/brc_hover_warp_left.png");
+}
+.blkLink #arrowRight .hover , .blkLink #arrowRight .current{
+	background-image:url("../i/brc_hover_warp_right.png");
+}
+/*英語*/
+.power .blkLink{
+	background-image:url("../i/rcblock01.png");
+}
+.multi .blkLink{
+	background-image:url("../i/rcblock02.png");
+}
+.multiControl .blkLink{
+	background-image:url("../i/rcblock03.png");
+}
+.vol_tvControl .blkLink{
+	background-image:url("../i/rcblock04.png");
+}
+.receiverSetting .blkLink{
+	background-image:url("../i/rcblock05.png");
+}
+.listeningMode .blkLink{
+	background-image:url("../i/rcblock06.png");
+}
+.sourceControl .blkLink{
+	background-image:url("../i/rcblock07.png");
+}
+.dimmer_sleep .blkLink{
+	background-image:url("../i/rcblock08.png");
+}
+.dimmer_sleep .blkLink.light{
+	background-image:url("../i/rcblock08_light.png");
+}
+
+/*日本語*/
+.power .blkLink.ja{
+	background-image:url("../i/rcblock01_ja.png");
+}
+.multi .blkLink.ja{
+	background-image:url("../i/rcblock02_ja.png");
+}
+.multiControl .blkLink.ja{
+	background-image:url("../i/rcblock03_ja.png");
+}
+.vol_tvControl .blkLink.ja{
+	background-image:url("../i/rcblock04_ja.png");
+}
+.receiverSetting .blkLink.ja{
+	background-image:url("../i/rcblock05_ja.png");
+}
+.listeningMode .blkLink.ja{
+	background-image:url("../i/rcblock06_ja.png");
+}
+.sourceControl .blkLink.ja{
+	background-image:url("../i/rcblock07_ja.png");
+}
+.dimmer_sleep .blkLink.ja{
+	background-image:url("../i/rcblock08_ja.png");
+}
+.dimmer_sleep .blkLink.ja.light{
+	background-image:url("../i/rcblock08_light_ja.png");
+}
+
+/*ボタン位置*/
+.blkLink div{
+	width: 20.5%;
+	height: 7.1%;
+}
+.blkLink #vol_u,
+.blkLink #vol_d{
+	width: 25%;
+	height: 9%;
+}
+.blkLink #play{
+	width: 41.5%;
+	height: 7.1%;
+}
+.blkLink #standby , .blkLink #source , .blkLink #enter{
+	width: 22.5%;
+	height: 12.8%;
+}
+
+.blkLink #audioP , .blkLink #videoP ,
+.blkLink #homeMenu , .blkLink #return{
+	width: 18%;
+	height: 9.7%;
+}
+.blkLink #arrowTop , .blkLink #arrowBottom{
+	width: 42.3%;
+	height: 11%;
+}
+.blkLink #arrowLeft , .blkLink #arrowRight{
+	width: 19.5%;
+	height: 23.5%;
+}
+
+#main , #bd , #ipod , #tuner , #auto , #skipRev ,
+#dimmer, #pause ,#b1 , #b4 , #b7 , #clr{
+	left: 8%;
+}
+#z2 , #dvd , #bt , #tv , #surr , #skipFwd ,
+#sleep , #play, #b2 , #b5 , #b8 , #b0{
+	left: 29.2%;
+    }
+#z3 , #sat , #mhl , #cd , #adv , #fastRev ,
+#b3 , #b6 , #b9 , #enterClass
+{
+	left: 50.5%;
+    }
+#hdz , #hdmi , #net , #all , #rcu , #stop , #fastFwd ,
+#fav , #disp , #ch_u , #ch_d , #chLv
+{
+	left: 71.5%;
+    }
+#tvPower , #tvInput , #status{
+	left: 12%;
+}
+#tvVol_u , #tvVol_d , #outP{
+	left:40%
+}
+#mute{
+	left: 67.5%;
+    top: 55%;
+}
+#vol_u , #vol_d{
+	left: 65.2%;
+}
+#standby{
+	left: 7%;
+}
+#source{
+	left: 71%;
+}
+#enter{
+	left: 39%;
+}
+#audioP , #homeMenu{
+	left: 9%;
+}
+#videoP , #return{
+	left: 73%;
+}
+#arrowTop , #arrowBottom{
+	left: 29%;
+}
+#arrowLeft{
+    left: 20.5%;
+}
+#arrowRight{
+    left: 60.2%;
+}
+
+#main,
+#z2,
+#z3,
+#hdz{
+	top: 37.4%;
+}
+#bd,
+#dvd,
+#sat,
+#hdmi{
+	top: 47.9%;
+}
+#ipod,
+#bt,
+#mhl,
+#net{
+	top: 58.3%;
+}
+#tuner,
+#tv,
+#cd,
+#all{
+	top: 68.5%;
+}
+#auto,
+#surr,
+#adv{
+	top: 52.2%;
+}
+#dimmer,
+#sleep,
+#rcu{
+	top: 44.5%;
+}
+#tvPower , #tvVol_u , #vol_u{
+	top:32.7%
+}
+#tvInput , #tvVol_d , #enter{
+	top:42.9%
+}
+#vol_d{
+	top: 41.3%;
+}
+#pause,
+#play,
+#stop{
+	top: 23.5%;
+}
+#skipRev,
+#skipFwd,
+#fastRev,
+#fastFwd
+{
+	top: 33.7%;
+}
+#b1,
+#b2,
+#b3,
+#fav
+{
+	top: 44.2%;
+}
+#b4,
+#b5,
+#b6,
+#disp
+{
+	top: 54.6%;
+}
+#b7,
+#b8,
+#b9,
+#ch_u
+{
+	top: 65%;
+}
+#clr,
+#b0,
+#enterClass,
+#ch_d
+{
+	top: 75%;
+}
+.blkLink #standby , .blkLink #source{
+	top: 19.8%;
+}
+#allStandby{
+    top: 22.5%;
+	left: 30.2%;
+}
+#status , #outP{
+	top:14.5%;
+}
+#chLv{
+	top:77.8%;
+}
+#audioP , #videoP{
+	top: 27.3%;
+}
+#homeMenu , #return{
+	top: 61.2%;
+}
+#arrowTop{
+    top: 32.3%;
+}
+#arrowBottom{
+    top: 54.6%;
+}
+#arrowLeft , #arrowRight{
+    top: 37%;
+}
+
+
+/*詳細説明ページ-----------------------------------------
+---------------------------------------------------------*/
+.Ti p{
+	font-weight:bold;
+}
+.Ar{
+	padding: 10px;
+	word-wrap: break-word;
+}
+.Ar ul{
+	padding-left:15px;
+}
+.Ar ul li{
+	list-style: disc outside none;
+}
+.Ar .movieLink {
+	text-align: center;
+}
+.Ar p:first-child .inimg img{
+	height: 1em;
+	width:auto;
+    vertical-align: text-top;
+}
+#msg{
+	display:none;
+}
+
+/*タイトルスタイル-----------------------------------------
+---------------------------------------------------------*/
+h1{
+	background:#3860c8;
+	color: #c8f8f8;
+	font-weight: bold;
+	border:1px solid #1860b0;
+	margin-bottom: 10px;
+	font-size: 1.4em;
+}
+h2{
+	font-size: 1.5em;
+	margin: 5px 0px 10px 0px;
+	padding: 0px 0px 3px 5px;
+	border-bottom: 1px solid #666666;
+	border-left: 5px solid #666666;
+	color: #181820;
+}
+.infoTitle {
+	min-height: 20px;
+    border-bottom: 2px solid #24930D;
+    border-left: 4px solid #24930D;
+    color: #209010;
+}
+.infoTitle p{
+	float: left;
+	font-size: 1.4em;
+	font-weight: bold;
+	height: 100%;
+}
+.infoTitle div{
+	text-align: right;
+}
+.infoTitle input.detailDesc{
+	display: none;
+}
+.infoTitle input.detailDesc.show{
+	display: inline-block;
+}
+.index .infoTitle div{/*トップページのみ*/
+	display:none;
+}
+.index .infoTitle p{/*トップページのみ*/
+	float: none;
+}
+
+h1, .infoTitle{
+    padding: 5px 0 5px 5px;
+}
+#mainContents~.infoTitle{
+	display: none;
+	margin-bottom: 10px;
+}
+
+h3{
+	background: url(../i/anc.gif) no-repeat 99% ;
+	font-size: 1.3em;
+	font-weight:bold;
+	color: #181820;
+	border-bottom: 1px solid #666666;
+	padding: 10px 2em 10px 3px ;
+	cursor: pointer;
+}
+h3 ~ div{
+	display:none;
+}
+h3 + .Ti{
+	padding-top:10px;
+}
+h3 .inimg img{
+	height: 0.9em;
+	vertical-align: text-top;
+}
+.headline{
+	background:#707880;
+	color:#fff;
+	padding: 5px 0 5px 5px;
+}
+.headline p{
+	display:inline-block;
+	vertical-align:middle;
+}
+.open{
+	background: url("../i/anc_open.gif") no-repeat 99% #b6b6ba;
+}
+h3 p{
+	margin:0;
+	padding:0;
+	width:98%;
+}
+
+
+
+/*コマンド-----------------------------------------------
+---------------------------------------------------------*/
+
+.cmnd {
+	cursor: pointer;
+    color: #488A18;
+}
+.var img , .specialCharactor img{
+	height: 0.8em;
+}
+
+/*リンクスタイル-------------------------------------------
+---------------------------------------------------------*/
+a{
+	color: #2D63A6;/*■■リンクカラー■■*/
+	padding: 0;
+	text-decoration:none;
+}
+span.gotop{
+	display: block;
+	text-align: right;
+	padding: 5px 0 15px 0;
+	clear: both;
+}
+span.gotop a{
+	display: inline;
+	text-decoration:none;
+	color: #2D63A6;/*■■リンクカラー■■*/
+	text-align: right;
+	border-bottom: 1px solid #2D63A6;
+}
+span.gotop a img{
+	padding-right:5px;
+	height: 0.8em;
+}
+
+
+/*js内sclollfit用スタイル--------------------------------
+---------------------------------------------------------*/
+#scrollblank{
+	clear:both;
+	height:0px;
+	display:none;
+}
+
+/*inputボタン用-------------------------------------------
+---------------------------------------------------------*/
+.fullBtn , .rcBtn{
+	display:none;
+}
+
+.mobile #footer_left , .pc.port #footer_left{
+    float: none;
+    width: auto;
+    margin: 0 auto;
+}
+.mobile #footer_right , .pc.port #footer_right{
+    float: none;
+    text-align: center;
+	line-height: normal;
+}
+
+
+
+/****************************************/
+/* デバイスと縦横向きごとの指定			*/
+/*  .port ⇒ portlate状態				*/
+/*	.mobile ⇒ スマホ、タブレット向け	*/
+/*	.sp ⇒ スマホ						*/
+/*	.tb ⇒ タブレット					*/
+/*	.rLayout ⇒ 右カラム表示			*/
+/*　.pc ⇒ PC向け						*/
+/****************************************/
+
+/*縦portlate 表示------------------------------------
+----------------------------------------------------*/
+.index.port .infoTitle p{
+	float: left;
+}
+.port #mainContents{
+    float: none;
+    width: auto;
+    padding-top: 10px;
+}
+.port .rightCont{
+    display: none;
+}
+.port .leftCont{
+    margin: 0 auto;
+    float:none;
+}
+.port #mainContents~.infoTitle{
+	display: block;
+}
+.port .mobileBtn{
+	display:none;
+}
+.port .fullBtn , .port .rcBtn{
+	display: inline-block;
+}
+.port .infoTitle div{
+	display:block;
+}
+.port.rLayout .openStatus{
+	display:none;
+}
+
+/*縦 ステータス（右カラム）表示---------------------------
+---------------------------------------------------------*/
+.port.rLayout .leftCont {
+    display: none;
+}
+.port.rLayout .rightCont {
+    display: block;
+}
+.port.rLayout #mainContents~.infoTitle{
+	display: none;
+}
+.port.mobile #mainContents {
+    width: auto;
+}
+
+/*スマホ版のみ-------------------------------------------
+---------------------------------------------------------*/
+body.mobile.port.sp{
+	font-size:200%;
+}
+body.mobile.sp{
+	font-size:150%;
+}
+.sp.port .rc , .sp.port .hoverArea div , .sp.port .thisArea div{
+	width:330px;/*リモコン画像の横幅を指定 デフォルト160px */
+	background-size:100% auto; 
+}
+
+.sp.port .rcBlock {
+/*	width:540px;*/
+	width: 58%;
+}
+
+
+/*タブレットのみ-------------------------------------------
+---------------------------------------------------------*/
+body.mobile.tb {
+	font-size:16px;
+}
+
+/*モバイル版のみ-------------------------------------------
+---------------------------------------------------------*/
+.mobile #footer_left img{
+    width: 30%;
+    min-width: 110px;
+}
+.mobile.port .leftCont {
+    width: auto;
+}
+.mobile h3{
+	background-size: 1em auto;
+}
+.mobile .Ar a img , .mobile .Ar .inimg img{
+    width: 50%;
+}
+
+/*PC版のみ-------------------------------------------------
+---------------------------------------------------------*/
+.pc.port .wrapp{
+	width:480px;
+	margin: 0 auto;
+}
+
+/*TABLE---------------------------------------------------
+---------------------------------------------------------*/
+.border_horizontal td{
+	border-width: 1px 0px;
+	border-color: #808080;
+	border-style: solid;
+	padding: 2px 0px;
+}
+
+.border_horizontal thead td{
+	background:#b6b6ba;
+}
+
+.border_horizontal td p{
+	font-size:90%;
+}
+
+/*OL---------------------------------------------------
+---------------------------------------------------------*/
+ol p{
+	margin-left: 12px;
+}
+.ol_prefix{
+	margin-left: -12px;
+}
