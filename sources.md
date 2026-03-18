@@ -20,12 +20,12 @@ HDMI 5, HDMI 6, HDMI 7, Phono
 
 ## Main Zone
 
-BD, DVD, SAT/CBL, TV, BT Audio, Network, Spotify
+DVD, SAT/CBL
 
 ## Zone 2
 
-BD, DVD, TV, BT Audio
+DVD, SAT/CBL
 
 ## HD Zone
 
-BD, DVD, TV, BT Audio
+DVD, SAT/CBL
