@@ -6,6 +6,7 @@
 (function () {
     'use strict';
 
+    const APP_VERSION = '0.1.0';
     const DEFAULT_IP = '192.168.68.60';
     const STATUS_POLL_INTERVAL = 2000; // ms
     const COMMAND_COOLDOWN = 150; // ms between rapid commands
@@ -335,6 +336,10 @@
     // ----- Init -----
 
     function init() {
+        // Set version in footer
+        var versionEl = document.getElementById('app-version');
+        if (versionEl) versionEl.textContent = APP_VERSION;
+
         // Setup screen
         els.ipSaveBtn.addEventListener('click', connectToAmp);
         els.ipInput.addEventListener('keydown', function (e) {
