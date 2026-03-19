@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.2.4';
+    const APP_VERSION = '0.9.0';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
