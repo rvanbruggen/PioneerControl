@@ -332,6 +332,10 @@ main {
 
 .zone-body.dimmed {
     opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.zone-body.dimmed * {
     pointer-events: none;
 }
 

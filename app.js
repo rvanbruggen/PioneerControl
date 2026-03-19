@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.2.3';
+    const APP_VERSION = '0.2.4';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -98,26 +98,26 @@
             { cmd: '00FN', name: 'Phono' }
         ],
         z2: [
-            { cmd: 'Z2F25', name: 'BD' },
-            { cmd: 'Z2F04', name: 'DVD' },
-            { cmd: 'Z2F06', name: 'SAT/CBL' },
-            { cmd: 'Z2F05', name: 'TV' },
-            { cmd: 'Z2F17', name: 'iPod/USB' },
-            { cmd: 'Z2F01', name: 'CD' },
-            { cmd: 'Z2F02', name: 'Tuner' },
-            { cmd: 'Z2F33', name: 'BT Audio' },
-            { cmd: 'Z2F26', name: 'Network' }
+            { cmd: '25ZS', name: 'BD' },
+            { cmd: '04ZS', name: 'DVD' },
+            { cmd: '06ZS', name: 'SAT/CBL' },
+            { cmd: '05ZS', name: 'TV' },
+            { cmd: '17ZS', name: 'iPod/USB' },
+            { cmd: '01ZS', name: 'CD' },
+            { cmd: '02ZS', name: 'Tuner' },
+            { cmd: '33ZS', name: 'BT Audio' },
+            { cmd: '26ZS', name: 'Network' }
         ],
         hd: [
-            { cmd: 'ZEA25', name: 'BD' },
-            { cmd: 'ZEA04', name: 'DVD' },
-            { cmd: 'ZEA06', name: 'SAT/CBL' },
-            { cmd: 'ZEA05', name: 'TV' },
-            { cmd: 'ZEA17', name: 'iPod/USB' },
-            { cmd: 'ZEA01', name: 'CD' },
-            { cmd: 'ZEA02', name: 'Tuner' },
-            { cmd: 'ZEA33', name: 'BT Audio' },
-            { cmd: 'ZEA26', name: 'Network' }
+            { cmd: '25ZEA', name: 'BD' },
+            { cmd: '04ZEA', name: 'DVD' },
+            { cmd: '06ZEA', name: 'SAT/CBL' },
+            { cmd: '05ZEA', name: 'TV' },
+            { cmd: '17ZEA', name: 'iPod/USB' },
+            { cmd: '01ZEA', name: 'CD' },
+            { cmd: '02ZEA', name: 'Tuner' },
+            { cmd: '33ZEA', name: 'BT Audio' },
+            { cmd: '26ZEA', name: 'Network' }
         ]
     };
 
@@ -162,9 +162,10 @@
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'text/plain;charset=UTF-8',
                 'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'If-Modified-Since': 'Thu, 1 Jan 1970 00:00:00 GMT'
             },
             body: body
         }).catch(function () {

@@ -3,9 +3,9 @@
 Proxy for Pioneer Amp Control — bypasses browser CORS restrictions.
 Serves the app and forwards amp requests. Works locally and on a NAS/server.
 
-Commands are sent to the amp via TCP on port 23 (Pioneer IP Control protocol),
-which is the same channel used by Pioneer's iOS/Android apps and gives full
-multi-zone support. Status is still read via HTTP GET to StatusHandler.asp.
+Commands and status are both sent via HTTP to the amp's built-in web interface
+(EventHandler.asp and StatusHandler.asp), matching the same headers used by
+Pioneer's own Interactive Operating Guide.
 
 Usage:
     python3 proxy.py <amp-ip> [port] [bind-host]
@@ -25,7 +25,6 @@ Synology Task Scheduler command:
 import os
 import sys
 import socket
-import threading
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -45,21 +44,6 @@ def main():
     # Serve static files from the project root directory
     docs_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(docs_dir)
-
-    # Serialise TCP writes so rapid back-to-back commands don't collide.
-    _tcp_lock = threading.Lock()
-
-    def send_via_tcp(cmd):
-        """Send a Pioneer IP Control command via TCP port 23.
-        Returns True on success, False on failure."""
-        with _tcp_lock:
-            try:
-                with socket.create_connection((amp_ip, 23), timeout=2) as sock:
-                    sock.sendall((cmd + '\r\n').encode('ascii'))
-                return True
-            except Exception as exc:
-                print(f'[TCP] {cmd!r} failed: {exc}')
-                return False
 
     class Handler(SimpleHTTPRequestHandler):
 
@@ -95,8 +79,8 @@ def main():
             return any(path == p for p in self.AMP_PATHS)
 
         def _command(self, body):
-            """Extract WebToHostItem command and send via TCP (Pioneer IP Control).
-            Falls back to HTTP if TCP is unavailable."""
+            """Forward a WebToHostItem command via HTTP to the amp,
+            using the same headers as Pioneer's own web interface."""
             cmd = ''
             if body:
                 try:
@@ -107,24 +91,36 @@ def main():
                 except Exception:
                     pass
 
-            if cmd and send_via_tcp(cmd):
-                # TCP succeeded — return a simple 200 OK to the browser
-                self._cors_headers(200)
-                self.send_header('Content-Length', '0')
-                self.end_headers()
-            else:
-                # TCP unavailable — fall back to HTTP forwarding
-                self._proxy('POST', body)
+            target = 'http://' + amp_ip + '/EventHandler.asp'
+            req = urllib.request.Request(target, data=body, method='POST')
+            # Match Pioneer's Interactive Operating Guide headers exactly.
+            # Content-Type must be text/plain — the amp rejects other types
+            # for some zone commands (e.g. Zone 2 input select).
+            req.add_header('Content-Type',      'text/plain;charset=UTF-8')
+            req.add_header('If-Modified-Since', 'Thu, 1 Jan 1970 00:00:00 GMT')
+            req.add_header('Pragma',            'no-cache')
+            req.add_header('Cache-Control',     'no-cache')
+            req.add_header('Connection',        'keep-alive')
+            req.add_header('Origin',            'http://' + amp_ip)
+            req.add_header('Referer',           'http://' + amp_ip + '/index.html')
+
+            try:
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    resp_body = resp.read()
+                    print(f'[CMD] {cmd!r} → HTTP {resp.status}')
+                    self._cors_headers(resp.status)
+                    self.send_header('Content-Length', str(len(resp_body)))
+                    self.end_headers()
+                    self.wfile.write(resp_body)
+            except Exception as exc:
+                print(f'[CMD] {cmd!r} → error: {exc}')
+                self.send_error(502, str(exc))
 
         def _proxy(self, method, body=None):
             target = 'http://' + amp_ip + self.path
             req = urllib.request.Request(target, data=body, method=method)
             if body:
-                req.add_header(
-                    'Content-Type',
-                    self.headers.get('Content-Type',
-                                     'application/x-www-form-urlencoded')
-                )
+                req.add_header('Content-Type', 'text/plain;charset=UTF-8')
             req.add_header('Pragma', 'no-cache')
             req.add_header('Cache-Control', 'no-cache')
 
@@ -160,7 +156,7 @@ def main():
         local_ip = '(unknown)'
 
     print(f'Serving app from   : {docs_dir}')
-    print(f'Forwarding amp at  : http://{amp_ip}/ (status) + tcp://{amp_ip}:23 (commands)')
+    print(f'Forwarding amp at  : http://{amp_ip}/')
     if bind_host == '0.0.0.0':
         print(f'Open on this device: http://localhost:{port}/')
         print(f'Open on other devices: http://{local_ip}:{port}/')

@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.2.3**
+**Current version: 0.2.4**
 
 ## Why this project?
 
@@ -98,8 +98,8 @@ The app auto-connects when opened via HTTP — no settings screen needed.
 | `Z2MZ` | Zone 2 mute toggle |
 | `HZMUT` | HD Zone mute toggle |
 | `##FN` | Select input (e.g. `25FN` = BD, `04FN` = DVD) |
-| `Z2F##` | Zone 2 input select |
-| `ZEA##` | HD Zone input select |
+| `##ZS` | Zone 2 input select (e.g. `04ZS` = DVD, `06ZS` = SAT/CBL) |
+| `##ZEA` | HD Zone input select (e.g. `04ZEA` = DVD) |
 | `?AST` | Query audio status |
 | `?RGC` | Query general status |
 
@@ -184,6 +184,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.2.4** — Fix Zone 2 and HD Zone input selection. Correct command format: Zone 2 uses `##ZS` (e.g. `04ZS`), HD Zone uses `##ZEA` (e.g. `04ZEA`) — not the `Z2F##`/`ZEA##` formats previously used. Also corrected HTTP `Content-Type` to `text/plain;charset=UTF-8` to match Pioneer's own web interface. Removed unused TCP/port-23 code from `proxy.py`.
 - **0.2.3** — Commands now sent via TCP port 23 (Pioneer IP Control) instead of HTTP POST. Fixes Zone 2 (and HD Zone) input selection, which the amp's HTTP interface silently ignores. Status polling remains on HTTP. Falls back to HTTP if TCP is unavailable.
 - **0.2.2** — Clickable zone titles (h2) toggle expand/collapse. Main Zone and Zone 2 now expand by default on load.
 - **0.2.1** — `sources.md` configuration file: edit once on the NAS to set default input sources for all users. No per-device setup needed for family members.
