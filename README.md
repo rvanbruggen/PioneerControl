@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.1**
+**Current version: 0.9.3**
 
 ## Why this project?
 
@@ -92,8 +92,6 @@ The app auto-connects when opened via HTTP — no settings screen needed.
 | `ZU` / `ZD` | Zone 2 volume up / down |
 | `HZU` / `HZD` | HD Zone volume up / down |
 | `###VL` | Set main zone volume directly (3-digit code, dB = (code−161)/2) |
-| `###ZV` | Set Zone 2 volume directly |
-| `###HZV` | Set HD Zone volume directly |
 | `MZ` | Main zone mute toggle |
 | `Z2MZ` | Zone 2 mute toggle |
 | `HZMUT` | HD Zone mute toggle |
@@ -184,6 +182,8 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.9.3** — Fix Zone 2 and HD Zone slider not changing volume. Root cause: the Pioneer HTTP interface has no direct volume-set command for these zones (`###ZV` / `###HZV` are not supported — only `ZU`/`ZD`/`HZU`/`HZD` step commands exist). Now tracks the current volume code from the status poll and sends the correct number of up/down steps at 50 ms intervals when the slider is released.
+- **0.9.2** — Fix slider event handling: use `change` event (reliable on release) instead of `mouseup` (misses if pointer drifts off thumb). Block poll-driven snap-back during active dragging.
 - **0.9.1** — Replace +/− volume buttons and clickable dB display with a per-zone slider (0–100%) and mute button. Slider updates live dB readout while dragging; releases the command on mouse/touch up.
 - **0.9.0** — Milestone release. All three zones fully working: power, volume, mute, and input selection for Main Zone, Zone 2, and HD Zone. Responsive dark-theme UI, collapsible zones, direct dB volume entry, `sources.md` for shared defaults, CORS proxy for NAS/server hosting.
 - **0.2.4** — Fix Zone 2 and HD Zone input selection. Correct command format: Zone 2 uses `##ZS` (e.g. `04ZS`), HD Zone uses `##ZEA` (e.g. `04ZEA`) — not the `Z2F##`/`ZEA##` formats previously used. Also corrected HTTP `Content-Type` to `text/plain;charset=UTF-8` to match Pioneer's own web interface. Removed unused TCP/port-23 code from `proxy.py`.

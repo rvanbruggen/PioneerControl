@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.1';
+    const APP_VERSION = '0.9.3';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -20,6 +20,9 @@
     let statusTimer = null;
     let connected = false;
     let lastCommandTime = 0;
+
+    // Last known raw volume codes per zone — used for step-based zone 2 / HD control
+    var currentVolCode = { main: null, z2: null, hd: null };
 
     // Default input sources loaded from sources.md (null = fall back to all inputs)
     let defaultSources = null;
@@ -176,6 +179,43 @@
         });
     }
 
+    // Bypass the cooldown queue — used for rapid volume stepping on zones that
+    // don't support direct volume set (Zone 2, HD Zone).
+    function sendCommandDirect(cmd) {
+        var url = 'http://' + ampIp + '/EventHandler.asp';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=UTF-8',
+                'Pragma': 'no-cache',
+                'Cache-Control': 'no-cache',
+                'If-Modified-Since': 'Thu, 1 Jan 1970 00:00:00 GMT'
+            },
+            body: 'WebToHostItem=' + cmd
+        }).catch(function () {});
+    }
+
+    // Send N up/down volume step commands for zones that lack direct-set support.
+    // Commands are spaced 50 ms apart so the amp can keep up.
+    var STEP_CMDS = { z2: { up: 'ZU', down: 'ZD' }, hd: { up: 'HZU', down: 'HZD' } };
+    function setVolumeBySteps(zone, targetPct, slider) {
+        var current = currentVolCode[zone];
+        if (!current || current <= 0) return;
+        var target = Math.max(1, Math.min(185, Math.round(targetPct / 100 * 185)));
+        var delta = target - current;
+        if (delta === 0) return;
+        var cmd = delta > 0 ? STEP_CMDS[zone].up : STEP_CMDS[zone].down;
+        var steps = Math.min(Math.abs(delta), 90); // cap at 90 steps (~23 dB)
+        var totalMs = steps * 50;
+        // Block poll-driven slider updates until all steps have fired + 1 s buffer
+        if (slider) slider._settledUntil = Date.now() + totalMs + 1000;
+        for (var i = 0; i < steps; i++) {
+            (function (delay) {
+                setTimeout(function () { sendCommandDirect(cmd); }, delay);
+            })(i * 50);
+        }
+    }
+
     function pollStatus() {
         const url = 'http://' + ampIp + '/StatusHandler.asp';
 
@@ -282,6 +322,7 @@
                 var z2 = data.Z[1].Z2;
                 updateZonePower(els.z2Power, z2.P);
                 updateVolume(els.z2Volume, els.z2VolSlider, z2.V, z2.M);
+                if (z2.V > 0 && z2.M !== 1) currentVolCode.z2 = parseInt(z2.V, 10);
                 updateInputHighlight('z2-inputs', z2.F);
                 toggleZoneBody('zone2', z2.P);
             }
@@ -301,6 +342,7 @@
                 } else {
                     $('#hd-vol-section').style.display = '';
                     updateVolume(els.hdVolume, els.hdVolSlider, hdData.V, hdData.M);
+                    if (hdData.V > 0 && hdData.M !== 1) currentVolCode.hd = parseInt(hdData.V, 10);
                 }
                 updateInputHighlight('hd-inputs', hdData.F);
                 toggleZoneBody('hdzone', hdData.P);
@@ -344,9 +386,9 @@
     }
 
     function updateVolume(el, slider, vol, mute) {
-        // Skip update while the user is dragging the slider, or within 1 s of releasing it
+        // Skip update while the user is dragging, or while steps are still in-flight
         if (slider && slider._dragging) return;
-        if (slider && slider._settledAt && (Date.now() - slider._settledAt) < 1000) return;
+        if (slider && slider._settledUntil && Date.now() < slider._settledUntil) return;
         if (mute === 1) {
             el.textContent = 'MUTED';
         } else if (vol === 0 || vol === '000') {
@@ -585,9 +627,16 @@
             function commitSlider() {
                 if (!cfg.slider._dragging) return; // already committed
                 cfg.slider._dragging = false;
-                cfg.slider._settledAt = Date.now(); // suppress poll snap-back for 1 s
-                var db = -80 + (parseInt(cfg.slider.value) / 100) * 92;
-                setVolumeByDb(cfg.zone, db);
+                var pct = parseInt(cfg.slider.value);
+                if (cfg.zone === 'main') {
+                    // Main zone supports direct volume set via ###VL
+                    cfg.slider._settledUntil = Date.now() + 1000;
+                    var db = -80 + (pct / 100) * 92;
+                    setVolumeByDb('main', db);
+                } else {
+                    // Zone 2 and HD Zone: no direct set — use ZU/ZD stepping
+                    setVolumeBySteps(cfg.zone, pct, cfg.slider);
+                }
             }
             // 'change' is the reliable commit event for <input type=range> — fires on
             // release regardless of where the pointer ended up (unlike 'mouseup' which
