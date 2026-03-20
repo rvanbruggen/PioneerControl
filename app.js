@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.0';
+    const APP_VERSION = '0.9.1';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -138,12 +138,15 @@
         connectionStatus: $('#connection-status'),
         mainPower: $('#main-power'),
         mainVolume: $('#main-volume'),
+        mainVolSlider: $('#main-vol-slider'),
         mainMute: $('#main-mute'),
         mainListeningMode: $('#main-listening-mode'),
         z2Power: $('#z2-power'),
         z2Volume: $('#z2-volume'),
+        z2VolSlider: $('#z2-vol-slider'),
         hdPower: $('#hd-power'),
         hdVolume: $('#hd-volume'),
+        hdVolSlider: $('#hd-vol-slider'),
     };
 
     // ----- Network layer -----
@@ -268,7 +271,7 @@
             if (data.Z[0] && data.Z[0].MZ) {
                 var mz = data.Z[0].MZ;
                 updateZonePower(els.mainPower, mz.P);
-                updateVolume(els.mainVolume, mz.V, mz.M);
+                updateVolume(els.mainVolume, els.mainVolSlider, mz.V, mz.M);
                 updateMuteButton(els.mainMute, mz.M);
                 updateInputHighlight('main-inputs', mz.F);
                 toggleZoneBody('main-zone', mz.P);
@@ -278,7 +281,7 @@
             if (data.Z[1] && data.Z[1].Z2) {
                 var z2 = data.Z[1].Z2;
                 updateZonePower(els.z2Power, z2.P);
-                updateVolume(els.z2Volume, z2.V, z2.M);
+                updateVolume(els.z2Volume, els.z2VolSlider, z2.V, z2.M);
                 updateInputHighlight('z2-inputs', z2.F);
                 toggleZoneBody('zone2', z2.P);
             }
@@ -297,7 +300,7 @@
                     $('#hd-vol-section').style.display = 'none';
                 } else {
                     $('#hd-vol-section').style.display = '';
-                    updateVolume(els.hdVolume, hdData.V, hdData.M);
+                    updateVolume(els.hdVolume, els.hdVolSlider, hdData.V, hdData.M);
                 }
                 updateInputHighlight('hd-inputs', hdData.F);
                 toggleZoneBody('hdzone', hdData.P);
@@ -335,16 +338,26 @@
         }
     }
 
-    function updateVolume(el, vol, mute) {
-        // Skip update while the user is editing this element
-        if (el._editing) return;
+    function setSliderFill(slider, pct) {
+        slider.value = pct;
+        slider.style.setProperty('--fill', pct + '%');
+    }
+
+    function updateVolume(el, slider, vol, mute) {
+        // Skip update while the user is dragging the slider
+        if (slider && slider._dragging) return;
         if (mute === 1) {
             el.textContent = 'MUTED';
         } else if (vol === 0 || vol === '000') {
             el.textContent = '---';
+            if (slider) setSliderFill(slider, 0);
         } else {
             var db = (parseInt(vol, 10) - 161) / 2;
             el.textContent = db + ' dB';
+            if (slider) {
+                var pct = Math.round((db + 80) / 92 * 100);
+                setSliderFill(slider, Math.max(0, Math.min(100, pct)));
+            }
         }
     }
 
@@ -357,47 +370,6 @@
         var volCode = Math.round(clamped * 2 + 161);
         volCode = Math.max(0, Math.min(185, volCode));
         sendCommand(String(volCode).padStart(3, '0') + suffix);
-    }
-
-    function makeVolumeEditable(span, zone) {
-        span.classList.add('vol-editable');
-        span.title = 'Click to set volume directly';
-
-        span.addEventListener('click', function () {
-            if (span._editing) return;
-            span._editing = true;
-
-            // Pull numeric part from current display (e.g. "-30 dB" → -30)
-            var match = span.textContent.match(/(-?\d+\.?\d*)/);
-            var currentDb = match ? parseFloat(match[1]) : 0;
-
-            var input = document.createElement('input');
-            input.type = 'number';
-            input.step = '0.5';
-            input.min = '-80';
-            input.max = '12';
-            input.value = currentDb;
-            input.className = 'volume-edit-input';
-
-            span.parentNode.insertBefore(input, span);
-            span.style.display = 'none';
-            input.focus();
-            input.select();
-
-            function commit() {
-                var val = parseFloat(input.value);
-                if (!isNaN(val)) setVolumeByDb(zone, val);
-                input.remove();
-                span.style.display = '';
-                span._editing = false;
-            }
-
-            input.addEventListener('blur', commit);
-            input.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter')  { e.preventDefault(); commit(); }
-                if (e.key === 'Escape') { input.remove(); span.style.display = ''; span._editing = false; }
-            });
-        });
     }
 
     function updateMuteButton(btn, mute) {
@@ -581,8 +553,8 @@
             });
         });
 
-        // Volume & mute buttons (via data-cmd)
-        $$('.btn-vol, .btn-mute').forEach(function (btn) {
+        // Mute buttons (via data-cmd)
+        $$('.btn-mute').forEach(function (btn) {
             if (btn.dataset.cmd) {
                 btn.addEventListener('click', function () {
                     sendCommand(btn.dataset.cmd);
@@ -590,10 +562,30 @@
             }
         });
 
-        // Editable volume displays
-        makeVolumeEditable(els.mainVolume, 'main');
-        makeVolumeEditable(els.z2Volume,   'z2');
-        makeVolumeEditable(els.hdVolume,   'hd');
+        // Volume sliders
+        var sliderConfigs = [
+            { slider: els.mainVolSlider, label: els.mainVolume, zone: 'main' },
+            { slider: els.z2VolSlider,   label: els.z2Volume,   zone: 'z2' },
+            { slider: els.hdVolSlider,   label: els.hdVolume,   zone: 'hd' }
+        ];
+        sliderConfigs.forEach(function (cfg) {
+            if (!cfg.slider) return;
+            cfg.slider.addEventListener('mousedown',  function () { cfg.slider._dragging = true; });
+            cfg.slider.addEventListener('touchstart', function () { cfg.slider._dragging = true; }, { passive: true });
+            function commitSlider() {
+                cfg.slider._dragging = false;
+                var db = -80 + (parseInt(cfg.slider.value) / 100) * 92;
+                setVolumeByDb(cfg.zone, db);
+            }
+            cfg.slider.addEventListener('mouseup',   commitSlider);
+            cfg.slider.addEventListener('touchend',  commitSlider);
+            cfg.slider.addEventListener('touchcancel', function () { cfg.slider._dragging = false; });
+            cfg.slider.addEventListener('input', function () {
+                cfg.slider.style.setProperty('--fill', cfg.slider.value + '%');
+                var db = Math.round((-80 + (parseInt(cfg.slider.value) / 100) * 92) * 2) / 2;
+                cfg.label.textContent = db + ' dB';
+            });
+        });
 
         // Input select buttons (generated dynamically)
         renderInputButtons('main');
@@ -612,27 +604,6 @@
                 var card = h2.closest('.zone-card');
                 handleCollapseToggle(card);
             });
-        });
-
-        // Long-press for volume buttons (repeat while held)
-        $$('.btn-vol').forEach(function (btn) {
-            var intervalId = null;
-            btn.addEventListener('mousedown', function () {
-                intervalId = setInterval(function () {
-                    sendCommand(btn.dataset.cmd);
-                }, 250);
-            });
-            btn.addEventListener('mouseup', function () { clearInterval(intervalId); });
-            btn.addEventListener('mouseleave', function () { clearInterval(intervalId); });
-            btn.addEventListener('touchstart', function (e) {
-                e.preventDefault();
-                sendCommand(btn.dataset.cmd);
-                intervalId = setInterval(function () {
-                    sendCommand(btn.dataset.cmd);
-                }, 250);
-            }, { passive: false });
-            btn.addEventListener('touchend', function () { clearInterval(intervalId); });
-            btn.addEventListener('touchcancel', function () { clearInterval(intervalId); });
         });
 
         // Disconnect button

@@ -392,78 +392,64 @@ main {
 /* ===== Volume Control ===== */
 .volume-control {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
-.btn-round {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    font-weight: 700;
+.volume-slider-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: var(--bg-card-header);
-    color: var(--text);
-    border: 2px solid var(--border);
+    gap: 0.75rem;
 }
 
-.btn-round:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-}
-
-.btn-round:active {
-    background: var(--blue);
-    color: white;
-    border-color: var(--blue);
-}
-
-.volume-display {
-    text-align: center;
-    min-width: 100px;
-}
-
-.volume-display span {
-    display: block;
-    font-size: 1.4rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 0.3rem;
-}
-
-.vol-editable {
-    cursor: pointer;
-    border-bottom: 1px dashed var(--text-dim);
-}
-
-.vol-editable:hover {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-}
-
-.volume-edit-input {
-    display: block;
-    width: 90px;
-    margin: 0 auto 0.3rem;
-    background: var(--bg-card-header);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-size: 1.4rem;
-    font-weight: 700;
-    font-family: inherit;
-    text-align: center;
-    padding: 0.1em 0.3em;
+.vol-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--blue) 0%, var(--blue) var(--fill, 0%), var(--border) var(--fill, 0%), var(--border) 100%);
     outline: none;
+    cursor: pointer;
 }
 
-.volume-edit-input::-webkit-inner-spin-button,
-.volume-edit-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-.volume-edit-input[type=number] { -moz-appearance: textfield; }
+.vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(33, 150, 243, 0.5);
+    transition: background 0.15s, transform 0.1s;
+}
+
+.vol-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.vol-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 6px rgba(33, 150, 243, 0.5);
+}
+
+.vol-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+}
+
+.volume-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
 
 .btn-mute {
     background: transparent;
@@ -586,16 +572,6 @@ footer {
     .input-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-
-    .btn-round {
-        width: 50px;
-        height: 50px;
-        font-size: 1.3rem;
-    }
-
-    .volume-display span {
-        font-size: 1.2rem;
-    }
 }
 
 /* Tablets */
@@ -613,16 +589,6 @@ footer {
 
     .input-grid {
         grid-template-columns: repeat(5, 1fr);
-    }
-
-    .btn-round {
-        width: 64px;
-        height: 64px;
-        font-size: 1.6rem;
-    }
-
-    .volume-display span {
-        font-size: 1.6rem;
     }
 
     .btn-input {

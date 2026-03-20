@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.0**
+**Current version: 0.9.1**
 
 ## Why this project?
 
@@ -12,7 +12,7 @@ Pioneer's official Android app for controlling their network-connected amplifier
 
 - **Multi-zone control** — Main Zone, Zone 2, and HD Zone
 - **Power on/off** per zone
-- **Volume control** — up/down/mute per zone with long-press, plus direct dB entry by clicking the volume display
+- **Volume control** — slider (0–100%) per zone with live dB readout, plus mute button per zone
 - **Configurable input sources** — `sources.md` in the project sets the default inputs per zone for all users; individuals can still override via Settings
 - **Live status display** — real-time power state, volume level (in dB), active input, and listening mode
 - **Configurable app name** — rename the app to anything you like
@@ -184,6 +184,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.9.1** — Replace +/− volume buttons and clickable dB display with a per-zone slider (0–100%) and mute button. Slider updates live dB readout while dragging; releases the command on mouse/touch up.
 - **0.9.0** — Milestone release. All three zones fully working: power, volume, mute, and input selection for Main Zone, Zone 2, and HD Zone. Responsive dark-theme UI, collapsible zones, direct dB volume entry, `sources.md` for shared defaults, CORS proxy for NAS/server hosting.
 - **0.2.4** — Fix Zone 2 and HD Zone input selection. Correct command format: Zone 2 uses `##ZS` (e.g. `04ZS`), HD Zone uses `##ZEA` (e.g. `04ZEA`) — not the `Z2F##`/`ZEA##` formats previously used. Also corrected HTTP `Content-Type` to `text/plain;charset=UTF-8` to match Pioneer's own web interface. Removed unused TCP/port-23 code from `proxy.py`.
 - **0.2.3** — Commands now sent via TCP port 23 (Pioneer IP Control) instead of HTTP POST. Fixes Zone 2 (and HD Zone) input selection, which the amp's HTTP interface silently ignores. Status polling remains on HTTP. Falls back to HTTP if TCP is unavailable.
