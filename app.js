@@ -344,8 +344,9 @@
     }
 
     function updateVolume(el, slider, vol, mute) {
-        // Skip update while the user is dragging the slider
+        // Skip update while the user is dragging the slider, or within 1 s of releasing it
         if (slider && slider._dragging) return;
+        if (slider && slider._settledAt && (Date.now() - slider._settledAt) < 1000) return;
         if (mute === 1) {
             el.textContent = 'MUTED';
         } else if (vol === 0 || vol === '000') {
@@ -570,21 +571,30 @@
         ];
         sliderConfigs.forEach(function (cfg) {
             if (!cfg.slider) return;
+            // Mark as dragging on pointer-down so poll updates are suppressed
             cfg.slider.addEventListener('mousedown',  function () { cfg.slider._dragging = true; });
             cfg.slider.addEventListener('touchstart', function () { cfg.slider._dragging = true; }, { passive: true });
-            function commitSlider() {
-                cfg.slider._dragging = false;
-                var db = -80 + (parseInt(cfg.slider.value) / 100) * 92;
-                setVolumeByDb(cfg.zone, db);
-            }
-            cfg.slider.addEventListener('mouseup',   commitSlider);
-            cfg.slider.addEventListener('touchend',  commitSlider);
-            cfg.slider.addEventListener('touchcancel', function () { cfg.slider._dragging = false; });
+            // Also keep _dragging true during active input events (covers cases where
+            // mousedown fired on a parent but the slider already has focus)
             cfg.slider.addEventListener('input', function () {
+                cfg.slider._dragging = true;
                 cfg.slider.style.setProperty('--fill', cfg.slider.value + '%');
                 var db = Math.round((-80 + (parseInt(cfg.slider.value) / 100) * 92) * 2) / 2;
                 cfg.label.textContent = db + ' dB';
             });
+            function commitSlider() {
+                if (!cfg.slider._dragging) return; // already committed
+                cfg.slider._dragging = false;
+                cfg.slider._settledAt = Date.now(); // suppress poll snap-back for 1 s
+                var db = -80 + (parseInt(cfg.slider.value) / 100) * 92;
+                setVolumeByDb(cfg.zone, db);
+            }
+            // 'change' is the reliable commit event for <input type=range> — fires on
+            // release regardless of where the pointer ended up (unlike 'mouseup' which
+            // only fires if the pointer is still over the element).
+            cfg.slider.addEventListener('change',     commitSlider);
+            cfg.slider.addEventListener('touchend',   commitSlider);
+            cfg.slider.addEventListener('touchcancel', function () { cfg.slider._dragging = false; });
         });
 
         // Input select buttons (generated dynamically)
