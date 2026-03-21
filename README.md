@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.4**
+**Current version: 0.9.5**
 
 ## Why this project?
 
@@ -73,6 +73,28 @@ The app auto-connects when opened via HTTP — no settings screen needed.
 3. Enter your amplifier's IP address and click Connect
 
 **Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 2 instead.
+
+## Deploying updates to the NAS
+
+Once the NAS is set up, use the `deploy.sh` script to push updates without manual SSH steps:
+
+```bash
+./deploy.sh
+```
+
+This will:
+1. `rsync` all app files to the NAS (skipping `.git`, `PioneerSources`, `sources.md`, and the script itself)
+2. SSH into the NAS, stop the old proxy, and start the new one
+
+**First-time SSH setup** (do this once so you're never prompted for a password):
+```bash
+ssh-copy-id rikvanbruggen@192.168.68.80
+```
+
+**First-time `sources.md` deploy** (the sync script intentionally skips this file on subsequent runs so NAS edits are preserved):
+```bash
+scp sources.md rikvanbruggen@192.168.68.80:/volume1/homes/rikvanbruggen/RixPioneerControl/
+```
 
 ## Network requirements
 
@@ -177,6 +199,7 @@ RixPioneerControl/
 ├── icon.svg               # App icon used by PWA and browser tab
 ├── sw.js                  # Service worker (app-shell caching, offline support)
 ├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
+├── deploy.sh              # One-command deploy: rsync to NAS + restart proxy
 ├── sources.md             # Default input sources per zone (edit to customise for all users)
 ├── PioneerSources/        # Original Pioneer web interface (reference, do not modify)
 ├── CLAUDE.md              # AI coding assistant instructions
@@ -186,6 +209,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.9.5** — `deploy.sh`: one-command deploy script — rsyncs app files to the NAS and restarts the proxy over SSH. Excludes `.git`, `PioneerSources`, `CLAUDE.md`, and `sources.md` (NAS copy preserved). SSH key auth recommended.
 - **0.9.4** — Progressive Web App (PWA) support: `manifest.json`, `icon.svg`, and `sw.js` service worker added. Install the app from any browser via "Install app" / "Add to Home Screen". App shell is cached for fast load and basic offline resilience. Amp communication is always network-only.
 - **0.9.3** — Fix Zone 2 and HD Zone slider not changing volume. Root cause: the Pioneer HTTP interface has no direct volume-set command for these zones (`###ZV` / `###HZV` are not supported — only `ZU`/`ZD`/`HZU`/`HZD` step commands exist). Now tracks the current volume code from the status poll and sends the correct number of up/down steps at 50 ms intervals when the slider is released.
 - **0.9.2** — Fix slider event handling: use `change` event (reliable on release) instead of `mouseup` (misses if pointer drifts off thumb). Block poll-driven snap-back during active dragging.
