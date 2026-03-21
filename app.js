@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.3';
+    const APP_VERSION = '0.9.4';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -707,6 +707,13 @@
     // Fetch sources.md for default input configuration, then initialise.
     // Works when served via proxy/NAS; silently skipped when opened as file://.
     document.addEventListener('DOMContentLoaded', function () {
+        // Register service worker for PWA / offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function () {
+                // SW registration failure is non-fatal — app works fine without it
+            });
+        }
+
         fetch('sources.md')
             .then(function (r) { return r.ok ? r.text() : null; })
             .then(function (text) {

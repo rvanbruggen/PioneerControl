@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.3**
+**Current version: 0.9.4**
 
 ## Why this project?
 
@@ -19,6 +19,7 @@ Pioneer's official Android app for controlling their network-connected amplifier
 - **CORS proxy** — `proxy.py` sidesteps browser CORS restrictions for local use
 - **Responsive design** — optimized for phones, tablets, and desktops
 - **Dark theme** — easy on the eyes for home theater use
+- **Installable PWA** — install as a home-screen app on any phone or desktop via the browser's "Install app" / "Add to Home Screen" prompt; works offline once cached
 - **No build step** — vanilla HTML/CSS/JS, just open a URL
 
 ## How it works
@@ -172,6 +173,9 @@ RixPioneerControl/
 ├── index.html             # Main page
 ├── app.js                 # Application logic & network layer
 ├── style.css              # Responsive styles
+├── manifest.json          # PWA manifest (name, icon, display mode)
+├── icon.svg               # App icon used by PWA and browser tab
+├── sw.js                  # Service worker (app-shell caching, offline support)
 ├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
 ├── sources.md             # Default input sources per zone (edit to customise for all users)
 ├── PioneerSources/        # Original Pioneer web interface (reference, do not modify)
@@ -182,6 +186,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.9.4** — Progressive Web App (PWA) support: `manifest.json`, `icon.svg`, and `sw.js` service worker added. Install the app from any browser via "Install app" / "Add to Home Screen". App shell is cached for fast load and basic offline resilience. Amp communication is always network-only.
 - **0.9.3** — Fix Zone 2 and HD Zone slider not changing volume. Root cause: the Pioneer HTTP interface has no direct volume-set command for these zones (`###ZV` / `###HZV` are not supported — only `ZU`/`ZD`/`HZU`/`HZD` step commands exist). Now tracks the current volume code from the status poll and sends the correct number of up/down steps at 50 ms intervals when the slider is released.
 - **0.9.2** — Fix slider event handling: use `change` event (reliable on release) instead of `mouseup` (misses if pointer drifts off thumb). Block poll-driven snap-back during active dragging.
 - **0.9.1** — Replace +/− volume buttons and clickable dB display with a per-zone slider (0–100%) and mute button. Slider updates live dB readout while dragging; releases the command on mouse/touch up.
