@@ -7,18 +7,18 @@
 # First-time setup:
 #   Copy your SSH public key to the NAS so you're not prompted for a
 #   password on every deploy:
-#     ssh-copy-id rikvanbruggen@192.168.68.80
+#     ssh-copy-id rikvanbruggen@192.168.68.79
 #
 # NOTE: sources.md is intentionally excluded from the sync.
 #   It is meant to be edited directly on the NAS to change default input
 #   sources for all users.  Deploy it manually the very first time:
-#     scp sources.md rikvanbruggen@192.168.68.80:/volume1/homes/rikvanbruggen/RixPioneerControl/
+#     scp sources.md rikvanbruggen@192.168.68.79:/volume1/homes/rikvanbruggen/RixPioneerControl/
 
 set -euo pipefail
 
 # ---- Settings — update here if your network layout changes ----
 NAS_USER="rikvanbruggen"
-NAS_HOST="192.168.68.80"
+NAS_HOST="192.168.68.79"
 NAS_DIR="/volume1/homes/rikvanbruggen/RixPioneerControl"
 AMP_IP="192.168.68.60"
 PROXY_PORT="8080"

@@ -88,12 +88,12 @@ This will:
 
 **First-time SSH setup** (do this once so you're never prompted for a password):
 ```bash
-ssh-copy-id rikvanbruggen@192.168.68.80
+ssh-copy-id rikvanbruggen@192.168.68.79
 ```
 
 **First-time `sources.md` deploy** (the sync script intentionally skips this file on subsequent runs so NAS edits are preserved):
 ```bash
-scp sources.md rikvanbruggen@192.168.68.80:/volume1/homes/rikvanbruggen/RixPioneerControl/
+scp sources.md rikvanbruggen@192.168.68.79:/volume1/homes/rikvanbruggen/RixPioneerControl/
 ```
 
 ## Network requirements
