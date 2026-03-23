@@ -45,14 +45,21 @@ COPYFILE_DISABLE=1 tar cf - \
 
 echo ""
 echo "==> Restarting proxy on NAS..."
-# Kill whatever is currently listening on the proxy port.
-# We identify by port rather than process name because pkill -f matches the SSH
-# shell itself (the shell's argv contains 'proxy.py') and kills the session.
-$SSHN "${NAS_USER}@${NAS_HOST}" "PID=\$(netstat -tlnp 2>/dev/null | grep ':${PROXY_PORT} ' | awk '{print \$7}' | cut -d/ -f1); [ -n \"\$PID\" ] && kill \"\$PID\" && echo \"Stopped old proxy (PID \$PID).\" || true"
-sleep 1
-$SSHN "${NAS_USER}@${NAS_HOST}" "python3 -c \"import subprocess,os; subprocess.Popen(['/usr/bin/python3','-u','${NAS_DIR}/proxy.py','${AMP_IP}','${PROXY_PORT}','0.0.0.0'], cwd='${NAS_DIR}', stdin=open('/dev/null'), stdout=open('${NAS_DIR}/proxy.log','a'), stderr=subprocess.STDOUT, start_new_session=True)\""
-sleep 2
-$SSHN "${NAS_USER}@${NAS_HOST}" "netstat -tlnp 2>/dev/null | grep -q ':${PROXY_PORT} ' && echo 'Proxy running on port ${PROXY_PORT}.' || echo 'WARNING: proxy did not start — check proxy.log on NAS'"
+# Stop the old proxy by killing the process listening on the proxy port.
+# We look up the PID via netstat rather than using pkill -f, because pkill -f
+# matches the SSH shell itself (whose argv contains "proxy.py") and would kill
+# the SSH session before the new proxy can start.
+$SSHN "${NAS_USER}@${NAS_HOST}" "
+  PID=\$(netstat -tlnp 2>/dev/null | grep ':${PROXY_PORT} ' | awk '{print \$7}' | cut -d/ -f1)
+  if [ -n \"\$PID\" ]; then
+    kill \"\$PID\" && echo \"Stopped old proxy (PID \$PID).\"
+    sleep 1
+  fi
+  cd '${NAS_DIR}'
+  nohup /usr/bin/python3 proxy.py '${AMP_IP}' '${PROXY_PORT}' 0.0.0.0 < /dev/null >> proxy.log 2>&1 &
+  sleep 2
+  netstat -tlnp 2>/dev/null | grep -q ':${PROXY_PORT} ' && echo 'Proxy running on port ${PROXY_PORT}.' || echo 'WARNING: proxy did not start — check proxy.log on NAS'
+"
 
 echo ""
 echo "==> Deployment complete."
