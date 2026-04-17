@@ -6,14 +6,19 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.7';
+    const APP_VERSION = '0.9.8';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
     const COMMAND_COOLDOWN = 150; // ms between rapid commands
 
-    let ampDirectIp = localStorage.getItem('pioneer_amp_direct_ip') || localStorage.getItem('pioneer_amp_ip') || '';
-    let ampProxy    = localStorage.getItem('pioneer_amp_proxy') || '';
+    // Strip any protocol prefix (http:// or https://) — we store only host:port.
+    function stripProtocol(addr) {
+        return addr.replace(/^https?:\/\//i, '');
+    }
+
+    let ampDirectIp = stripProtocol(localStorage.getItem('pioneer_amp_direct_ip') || localStorage.getItem('pioneer_amp_ip') || '');
+    let ampProxy    = stripProtocol(localStorage.getItem('pioneer_amp_proxy') || '');
     // Effective request target: proxy if set, otherwise direct amp IP
     let ampIp = ampProxy || ampDirectIp;
     let appName = localStorage.getItem('pioneer_app_name') || DEFAULT_APP_NAME;
@@ -551,8 +556,8 @@
         var ip = els.ipInput.value.trim();
         if (!ip) return;
 
-        ampDirectIp = ip;
-        ampProxy    = els.proxyInput.value.trim();
+        ampDirectIp = stripProtocol(ip);
+        ampProxy    = stripProtocol(els.proxyInput.value.trim());
         ampIp       = ampProxy || ampDirectIp;
         localStorage.setItem('pioneer_amp_direct_ip', ampDirectIp);
         localStorage.setItem('pioneer_amp_proxy',     ampProxy);

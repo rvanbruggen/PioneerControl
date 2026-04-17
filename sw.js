@@ -9,7 +9,7 @@
  * Bump CACHE_NAME whenever the app shell changes so old caches are evicted.
  */
 
-var CACHE_NAME = 'pioneer-amp-v0.9.7';
+var CACHE_NAME = 'pioneer-amp-v0.9.8';
 
 var APP_SHELL = [
     '/',
