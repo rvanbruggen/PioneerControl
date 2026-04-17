@@ -40,7 +40,7 @@ $SSHN "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_DIR}'"
 cd "${LOCAL_DIR}"
 COPYFILE_DISABLE=1 tar cf - \
     index.html app.js style.css proxy.py \
-    manifest.json icon.svg sw.js README.md \
+    manifest.json icon.svg icon-192.png icon-512.png sw.js README.md \
     | $SSH "${NAS_USER}@${NAS_HOST}" "tar xf - -C '${NAS_DIR}' 2>/dev/null"
 
 echo ""

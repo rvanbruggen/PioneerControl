@@ -9,7 +9,7 @@
  * Bump CACHE_NAME whenever the app shell changes so old caches are evicted.
  */
 
-var CACHE_NAME = 'pioneer-amp-v0.9.8';
+var CACHE_NAME = 'pioneer-amp-v0.9.9';
 
 var APP_SHELL = [
     '/',
@@ -17,7 +17,9 @@ var APP_SHELL = [
     '/app.js',
     '/style.css',
     '/manifest.json',
-    '/icon.svg'
+    '/icon.svg',
+    '/icon-192.png',
+    '/icon-512.png'
 ];
 
 // ---- Install: pre-cache the app shell ----
