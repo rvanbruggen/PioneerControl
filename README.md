@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.6**
+**Current version: 0.9.7**
 
 ## Why this project?
 
@@ -210,6 +210,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.9.7** — Fix app not connecting when served over HTTPS. Auto-detection of proxy address now works for both HTTP and HTTPS. Request URLs now use relative paths when the proxy is the page origin, avoiding mixed-content blocking.
 - **0.9.6** — HTTPS support in `proxy.py`: auto-detects `cert.pem`/`key.pem` in the app directory and serves over HTTPS when present. `deploy.sh` now auto-generates a self-signed certificate on the NAS on first deploy. Required for Chrome on Android to show the PWA install prompt.
 - **0.9.5** — `deploy.sh`: one-command deploy script — copies app files to the NAS via tar-over-SSH and restarts the proxy. Excludes `sources.md` (NAS copy preserved). SSH key auth recommended.
 - **0.9.4** — Progressive Web App (PWA) support: `manifest.json`, `icon.svg`, and `sw.js` service worker added. Install the app from any browser via "Install app" / "Add to Home Screen". App shell is cached for fast load and basic offline resilience. Amp communication is always network-only.

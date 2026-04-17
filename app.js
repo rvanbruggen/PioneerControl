@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.6';
+    const APP_VERSION = '0.9.7';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -154,6 +154,18 @@
 
     // ----- Network layer -----
 
+    // Build a URL to the proxy/amp.  When ampIp matches the page's own origin
+    // (i.e. the page IS being served by the proxy) we use a relative path so
+    // the request automatically inherits the page protocol (http: or https:).
+    // This prevents mixed-content errors when the proxy is serving over HTTPS.
+    // Direct amp connections always use plain http: — the amp only speaks HTTP.
+    function ampUrl(path) {
+        if (ampIp === window.location.host) {
+            return path;
+        }
+        return 'http://' + ampIp + path;
+    }
+
     function sendCommand(cmd) {
         const now = Date.now();
         if (now - lastCommandTime < COMMAND_COOLDOWN) {
@@ -162,7 +174,7 @@
         }
         lastCommandTime = now;
 
-        const url = 'http://' + ampIp + '/EventHandler.asp';
+        const url = ampUrl('/EventHandler.asp');
         const body = 'WebToHostItem=' + cmd;
 
         fetch(url, {
@@ -182,7 +194,7 @@
     // Bypass the cooldown queue — used for rapid volume stepping on zones that
     // don't support direct volume set (Zone 2, HD Zone).
     function sendCommandDirect(cmd) {
-        var url = 'http://' + ampIp + '/EventHandler.asp';
+        var url = ampUrl('/EventHandler.asp');
         fetch(url, {
             method: 'POST',
             headers: {
@@ -217,7 +229,7 @@
     }
 
     function pollStatus() {
-        const url = 'http://' + ampIp + '/StatusHandler.asp';
+        const url = ampUrl('/StatusHandler.asp');
 
         fetch(url, {
             method: 'GET',
@@ -677,11 +689,11 @@
         // Apply saved name
         applyName();
 
-        // Auto-connect when served via HTTP (e.g. from NAS or local proxy).
+        // Auto-connect when served via the proxy (HTTP or HTTPS, not file://).
         // The page origin IS the proxy, so use window.location.host as the
         // effective amp address — no setup needed for family members.
-        var servedViaHttp = window.location.protocol === 'http:' && window.location.hostname !== '';
-        if (servedViaHttp && !ampDirectIp) {
+        var servedViaProxy = (window.location.protocol === 'http:' || window.location.protocol === 'https:') && window.location.hostname !== '';
+        if (servedViaProxy && !ampDirectIp) {
             ampDirectIp = window.location.host;
             ampProxy    = '';
             ampIp       = ampDirectIp;
