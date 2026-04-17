@@ -23,6 +23,7 @@ Synology Task Scheduler command:
 """
 
 import os
+import ssl
 import sys
 import socket
 import urllib.parse
@@ -44,6 +45,10 @@ def main():
     # Serve static files from the project root directory
     docs_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(docs_dir)
+
+    cert_file = os.path.join(docs_dir, 'cert.pem')
+    key_file  = os.path.join(docs_dir, 'key.pem')
+    use_https = os.path.exists(cert_file) and os.path.exists(key_file)
 
     class Handler(SimpleHTTPRequestHandler):
 
@@ -155,16 +160,27 @@ def main():
     except Exception:
         local_ip = '(unknown)'
 
+    protocol = 'https' if use_https else 'http'
     print(f'Serving app from   : {docs_dir}')
     print(f'Forwarding amp at  : http://{amp_ip}/')
+    if use_https:
+        print(f'TLS certificate    : {cert_file}')
     if bind_host == '0.0.0.0':
-        print(f'Open on this device: http://localhost:{port}/')
-        print(f'Open on other devices: http://{local_ip}:{port}/')
+        print(f'Open on this device: {protocol}://localhost:{port}/')
+        print(f'Open on other devices: {protocol}://{local_ip}:{port}/')
     else:
-        print(f'Open in browser    : http://localhost:{port}/')
+        print(f'Open in browser    : {protocol}://localhost:{port}/')
+    if use_https:
+        print('NOTE: First visit will show a browser security warning — click')
+        print('      "Advanced" → "Proceed" to accept the self-signed certificate.')
     print()
 
-    HTTPServer((bind_host, port), Handler).serve_forever()
+    server = HTTPServer((bind_host, port), Handler)
+    if use_https:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(cert_file, key_file)
+        server.socket = ctx.wrap_socket(server.socket, server_side=True)
+    server.serve_forever()
 
 
 if __name__ == '__main__':

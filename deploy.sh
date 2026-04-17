@@ -44,6 +44,25 @@ COPYFILE_DISABLE=1 tar cf - \
     | $SSH "${NAS_USER}@${NAS_HOST}" "tar xf - -C '${NAS_DIR}' 2>/dev/null"
 
 echo ""
+echo "==> Ensuring TLS certificate exists on NAS..."
+# A self-signed cert is required for Chrome on Android to show the PWA install
+# prompt.  Generated once and left in place on subsequent deploys.
+$SSHN "${NAS_USER}@${NAS_HOST}" "
+  if [ ! -f '${NAS_DIR}/cert.pem' ] || [ ! -f '${NAS_DIR}/key.pem' ]; then
+    echo 'Generating self-signed certificate (valid 10 years)...'
+    openssl req -x509 -newkey rsa:2048 \
+      -keyout '${NAS_DIR}/key.pem' \
+      -out '${NAS_DIR}/cert.pem' \
+      -days 3650 -nodes \
+      -subj '/CN=${NAS_HOST}' 2>/dev/null \
+      && echo 'Certificate generated.' \
+      || echo 'WARNING: openssl not available — proxy will fall back to HTTP (PWA install prompt will not appear)'
+  else
+    echo 'Certificate already present, skipping.'
+  fi
+"
+
+echo ""
 echo "==> Restarting proxy on NAS..."
 # Stop the old proxy by killing the process listening on the proxy port.
 # We look up the PID via netstat rather than using pkill -f, because pkill -f
@@ -63,4 +82,6 @@ $SSHN "${NAS_USER}@${NAS_HOST}" "
 
 echo ""
 echo "==> Deployment complete."
-echo "    App: http://${NAS_HOST}:${PROXY_PORT}/"
+echo "    App: https://${NAS_HOST}:${PROXY_PORT}/"
+echo "    First visit: click 'Advanced' → 'Proceed' to accept the self-signed certificate."
+echo "    After that, Chrome on Android will offer to install it as a PWA."

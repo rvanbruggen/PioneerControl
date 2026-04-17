@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.9.5**
+**Current version: 0.9.6**
 
 ## Why this project?
 
@@ -83,8 +83,9 @@ Once the NAS is set up, use the `deploy.sh` script to push updates without manua
 ```
 
 This will:
-1. `rsync` all app files to the NAS (skipping `.git`, `PioneerSources`, `sources.md`, and the script itself)
-2. SSH into the NAS, stop the old proxy, and start the new one
+1. Copy all app files to the NAS via tar-over-SSH (skipping `sources.md` so NAS edits are preserved)
+2. Generate a self-signed TLS certificate on the NAS if one doesn't already exist (required for PWA install on Android Chrome)
+3. Stop the old proxy and start the new one, serving over HTTPS
 
 **First-time SSH setup** (do this once so you're never prompted for a password):
 ```bash
@@ -209,7 +210,8 @@ RixPioneerControl/
 
 ## Version history
 
-- **0.9.5** — `deploy.sh`: one-command deploy script — rsyncs app files to the NAS and restarts the proxy over SSH. Excludes `.git`, `PioneerSources`, `CLAUDE.md`, and `sources.md` (NAS copy preserved). SSH key auth recommended.
+- **0.9.6** — HTTPS support in `proxy.py`: auto-detects `cert.pem`/`key.pem` in the app directory and serves over HTTPS when present. `deploy.sh` now auto-generates a self-signed certificate on the NAS on first deploy. Required for Chrome on Android to show the PWA install prompt.
+- **0.9.5** — `deploy.sh`: one-command deploy script — copies app files to the NAS via tar-over-SSH and restarts the proxy. Excludes `sources.md` (NAS copy preserved). SSH key auth recommended.
 - **0.9.4** — Progressive Web App (PWA) support: `manifest.json`, `icon.svg`, and `sw.js` service worker added. Install the app from any browser via "Install app" / "Add to Home Screen". App shell is cached for fast load and basic offline resilience. Amp communication is always network-only.
 - **0.9.3** — Fix Zone 2 and HD Zone slider not changing volume. Root cause: the Pioneer HTTP interface has no direct volume-set command for these zones (`###ZV` / `###HZV` are not supported — only `ZU`/`ZD`/`HZU`/`HZD` step commands exist). Now tracks the current volume code from the status poll and sends the correct number of up/down steps at 50 ms intervals when the slider is released.
 - **0.9.2** — Fix slider event handling: use `change` event (reliable on release) instead of `mouseup` (misses if pointer drifts off thumb). Block poll-driven snap-back during active dragging.
