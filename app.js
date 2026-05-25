@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.9.9';
+    const APP_VERSION = '0.10.0';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -397,9 +397,9 @@
         }
     }
 
-    function setSliderFill(slider, pct) {
-        slider.value = pct;
-        slider.style.setProperty('--fill', pct + '%');
+    function setSliderFill(slider, level) {
+        slider.value = level;
+        slider.style.setProperty('--fill', (level * 10) + '%');
     }
 
     function updateVolume(el, slider, vol, mute) {
@@ -415,8 +415,8 @@
             var db = (parseInt(vol, 10) - 161) / 2;
             el.textContent = db + ' dB';
             if (slider) {
-                var pct = Math.round((db + 80) / 92 * 100);
-                setSliderFill(slider, Math.max(0, Math.min(100, pct)));
+                var level = Math.round((db + 80) / 92 * 10);
+                setSliderFill(slider, Math.max(0, Math.min(10, level)));
             }
         }
     }
@@ -637,22 +637,20 @@
             // mousedown fired on a parent but the slider already has focus)
             cfg.slider.addEventListener('input', function () {
                 cfg.slider._dragging = true;
-                cfg.slider.style.setProperty('--fill', cfg.slider.value + '%');
-                var db = Math.round((-80 + (parseInt(cfg.slider.value) / 100) * 92) * 2) / 2;
+                cfg.slider.style.setProperty('--fill', (cfg.slider.value * 10) + '%');
+                var db = Math.round((-80 + (parseInt(cfg.slider.value) / 10) * 92) * 2) / 2;
                 cfg.label.textContent = db + ' dB';
             });
             function commitSlider() {
-                if (!cfg.slider._dragging) return; // already committed
+                if (!cfg.slider._dragging) return;
                 cfg.slider._dragging = false;
-                var pct = parseInt(cfg.slider.value);
+                var level = parseInt(cfg.slider.value);
                 if (cfg.zone === 'main') {
-                    // Main zone supports direct volume set via ###VL
                     cfg.slider._settledUntil = Date.now() + 1000;
-                    var db = -80 + (pct / 100) * 92;
+                    var db = -80 + (level / 10) * 92;
                     setVolumeByDb('main', db);
                 } else {
-                    // Zone 2 and HD Zone: no direct set — use ZU/ZD stepping
-                    setVolumeBySteps(cfg.zone, pct, cfg.slider);
+                    setVolumeBySteps(cfg.zone, level * 10, cfg.slider);
                 }
             }
             // 'change' is the reliable commit event for <input type=range> — fires on

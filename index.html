@@ -87,7 +87,10 @@
                 <div class="zone-body">
                     <div class="volume-control">
                         <div class="volume-slider-row">
-                            <input type="range" class="vol-slider" id="main-vol-slider" min="0" max="100" value="0" step="1">
+                            <div class="vol-slider-wrap">
+                                <input type="range" class="vol-slider" id="main-vol-slider" min="0" max="10" value="0" step="1">
+                                <div class="vol-ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+                            </div>
                             <button class="btn btn-mute" id="main-mute" data-cmd="MZ">MUTE</button>
                         </div>
                         <div class="volume-label"><span id="main-volume">-- dB</span></div>
@@ -115,7 +118,10 @@
                 <div class="zone-body">
                     <div class="volume-control">
                         <div class="volume-slider-row">
-                            <input type="range" class="vol-slider" id="z2-vol-slider" min="0" max="100" value="0" step="1">
+                            <div class="vol-slider-wrap">
+                                <input type="range" class="vol-slider" id="z2-vol-slider" min="0" max="10" value="0" step="1">
+                                <div class="vol-ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+                            </div>
                             <button class="btn btn-mute" data-cmd="Z2MZ">MUTE</button>
                         </div>
                         <div class="volume-label"><span id="z2-volume">-- dB</span></div>
@@ -139,7 +145,10 @@
                 <div class="zone-body">
                     <div class="volume-control" id="hd-vol-section">
                         <div class="volume-slider-row">
-                            <input type="range" class="vol-slider" id="hd-vol-slider" min="0" max="100" value="0" step="1">
+                            <div class="vol-slider-wrap">
+                                <input type="range" class="vol-slider" id="hd-vol-slider" min="0" max="10" value="0" step="1">
+                                <div class="vol-ticks"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+                            </div>
                             <button class="btn btn-mute" data-cmd="HZMUT">MUTE</button>
                         </div>
                         <div class="volume-label"><span id="hd-volume">-- dB</span></div>
