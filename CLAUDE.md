@@ -19,6 +19,8 @@ When incrementing versions:
 - **Minor (x.Y.0):** new features, new controls, UI improvements
 - **Major (X.0.0):** breaking changes, protocol changes, major rewrites
 
+When committing a version to the local clone, you should always push it to the remote as well.
+
 ### README.md
 
 Always keep `README.md` up to date when making changes:
