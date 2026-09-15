@@ -2,3 +2,4 @@ __pycache__/
 cert.pem
 key.pem
 .DS_Store
+.DS_Store
