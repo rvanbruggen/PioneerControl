@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.10.0**
+**Current version: 0.11.0**
 
 ## Why this project?
 
@@ -17,6 +17,8 @@ Pioneer's official Android app for controlling their network-connected amplifier
 - **Live status display** — real-time power state, volume level (in dB), active input, and listening mode
 - **Configurable app name** — rename the app to anything you like
 - **CORS proxy** — `proxy.py` sidesteps browser CORS restrictions for local use
+- **Docker deployment** — nginx container serving the app over HTTPS and proxying to the amp
+- **Resilient connection** — request timeouts and automatic reconnect after the proxy restarts or the phone wakes up
 - **Responsive design** — optimized for phones, tablets, and desktops
 - **Dark theme** — easy on the eyes for home theater use
 - **Installable PWA** — install as a home-screen app on any phone or desktop via the browser's "Install app" / "Add to Home Screen" prompt; works offline once cached
@@ -74,20 +76,57 @@ The app auto-connects when opened via HTTP — no settings screen needed.
 
 **Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 2 instead.
 
-### Option 4: Run in Docker (draft)
+### Option 4: Run in Docker (recommended for a home server)
 
-An nginx container serves the app and forwards `EventHandler.asp` /
-`StatusHandler.asp` to the amplifier, replacing `proxy.py`.
+An nginx container serves the app over HTTPS and forwards `EventHandler.asp` /
+`StatusHandler.asp` to the amplifier — the same job `proxy.py` does, with the
+same headers the amp expects.
 
-1. Set `AMP_IP` in `docker-compose.yml` to your amplifier's IP
-2. Run `docker compose up -d --build`
-3. Open `http://<host-ip>:8080/`
+| Setting (`docker-compose.yml`) | Default | Meaning |
+|---|---|---|
+| `AMP_IP` | `192.168.68.60` | Amplifier IP |
+| `HOST_IP` | `192.168.68.78` | Docker host IP — written into the self-signed certificate |
+| `HTTPS_PORT` | `8443` | Must match the HTTPS host port mapping |
+| ports | `8443:443`, `8081:80` | HTTPS app; plain HTTP redirects to HTTPS |
 
-`sources.md` is mounted from the host, so edits take effect without a rebuild.
-The container serves plain HTTP only, so the Chrome-on-Android PWA install
-prompt (which needs HTTPS) is not available yet.
+- A self-signed certificate is generated on first start and kept in the `certs`
+  volume, so users only accept the browser warning once (not after every rebuild).
+  HTTPS is what lets Chrome on Android offer "Install app".
+- `sources.md` is mounted from the host: edit it there and reload the page — no rebuild.
+- `docker ps` shows the container as `healthy` once nginx is up (`/healthz` on port 80).
+
+**First-time setup on the Docker host** (e.g. `192.168.68.78`):
+
+```bash
+ssh rvanbruggen@192.168.68.78
+git clone https://github.com/rvanbruggen/RixPioneerControl.git ~/RixPioneerControl
+cd ~/RixPioneerControl
+nano docker-compose.yml          # check AMP_IP, HOST_IP and ports
+docker compose up -d --build
+docker ps --filter name=pioneer-control   # wait for "(healthy)"
+```
+
+Then open `https://192.168.68.78:8443/`, click **Advanced → Proceed** once, and
+the app auto-connects.
+
+**Updating** after new commits are pushed:
+
+```bash
+ssh rvanbruggen@192.168.68.78 'cd ~/RixPioneerControl && git pull && docker compose up -d --build'
+```
+
+**Useful commands** (on the Docker host, in `~/RixPioneerControl`):
+
+```bash
+docker compose logs -f           # nginx access/error log
+docker compose restart           # restart after editing docker-compose.yml values
+docker compose down              # stop and remove the container (certificate volume is kept)
+```
 
 ## Deploying updates to the NAS
+
+> If you have moved to Docker (Option 4), don't run `deploy.sh` any more — it
+> restarts `proxy.py` on the NAS. See Option 4 for updating the container.
 
 Once the NAS is set up, use the `deploy.sh` script to push updates without manual SSH steps:
 
@@ -226,6 +265,7 @@ RixPioneerControl/
 
 ## Version history
 
+- **0.11.0** — Docker deployment and connection reliability. New nginx-based Docker setup (HTTPS with a persistent self-signed certificate, HTTP→HTTPS redirect, health check, host-mounted `sources.md`) replaces the NAS proxy. Connectivity fixes: requests now time out after 5 s instead of hanging when the proxy/amp is unreachable, polls no longer stack up, restarting polling can't leave an orphaned interval, the status dot only turns green for a valid status response, polling pauses while the page is hidden and restarts when it's visible again (phone wake), and the unload cleanup commands (`KOF`, `CLRLC`) are actually delivered.
 - **0.10.0** — Stepped volume sliders: replace smooth 0–100% sliders with fixed 0–10 level controls with visible tick marks. Each level maps to a specific dB value (~9.2 dB per step), making volume changes predictable and preventing accidental jumps on touchscreens.
 - **0.9.9** — Add PNG icons (192×192 and 512×512) required by Chrome on Android to show the PWA install prompt. SVG-only manifests are not sufficient for the install banner.
 - **0.9.8** — Strip any `http://`/`https://` protocol prefix from proxy/amp addresses on save and on startup, so pasting a full URL into the Settings field works correctly.

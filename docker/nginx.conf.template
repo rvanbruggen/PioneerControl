@@ -1,6 +1,30 @@
+# ---------- HTTP: health check + redirect to HTTPS ----------
 server {
     listen 80;
+    listen [::]:80;
     server_name _;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location / {
+        return 301 https://$host:${HTTPS_PORT}$request_uri;
+    }
+}
+
+# ---------- HTTPS: web app + amplifier proxy ----------
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name _;
+
+    ssl_certificate     /etc/nginx/certs/cert.pem;
+    ssl_certificate_key /etc/nginx/certs/key.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
 
     # ---------- Static web app ----------
     root /usr/share/nginx/html;
@@ -57,6 +81,10 @@ server {
         proxy_set_header   Pragma        no-cache;
         proxy_set_header   Cache-Control no-cache;
         proxy_set_header   Connection    "";
+        # Don't pass the browser's https:// Origin/Referer on to the amp
+        # (proxy.py doesn't send them either)
+        proxy_set_header   Origin        "";
+        proxy_set_header   Referer       "";
 
         # Timeouts — fail fast so the UI can show disconnected state quickly
         proxy_connect_timeout  3s;
@@ -64,12 +92,5 @@ server {
 
         # CORS on actual responses
         add_header Access-Control-Allow-Origin * always;
-    }
-
-    # ---------- Health check ----------
-    location = /healthz {
-        access_log off;
-        default_type text/plain;
-        return 200 "ok\n";
     }
 }

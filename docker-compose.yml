@@ -3,11 +3,19 @@ services:
     build: .
     container_name: pioneer-control
     ports:
-      - "8080:80"
+      - "8443:443"                # HTTPS — the app
+      - "8081:80"                 # HTTP — redirects to HTTPS
     environment:
-      - AMP_IP=192.168.68.60      # <-- set to your amplifier's IP
+      - AMP_IP=192.168.68.60      # <-- your amplifier's IP
+      - HOST_IP=192.168.68.78     # <-- this Docker host's IP (used in the certificate)
+      - HTTPS_PORT=8443           # <-- must match the HTTPS host port above
     volumes:
       # Edit sources.md on the host to change default input sources
       # for all users, without rebuilding the image.
       - ./sources.md:/usr/share/nginx/html/sources.md:ro
+      # Keeps the self-signed certificate across rebuilds
+      - certs:/etc/nginx/certs
     restart: unless-stopped
+
+volumes:
+  certs:

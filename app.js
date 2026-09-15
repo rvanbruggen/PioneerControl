@@ -6,11 +6,12 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.10.0';
+    const APP_VERSION = '0.11.0';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
     const COMMAND_COOLDOWN = 150; // ms between rapid commands
+    const REQUEST_TIMEOUT = 5000; // ms before a request to the proxy/amp is aborted
 
     // Strip any protocol prefix (http:// or https://) — we store only host:port.
     function stripProtocol(addr) {
@@ -23,6 +24,8 @@
     let ampIp = ampProxy || ampDirectIp;
     let appName = localStorage.getItem('pioneer_app_name') || DEFAULT_APP_NAME;
     let statusTimer = null;
+    let pollGeneration = 0;   // incremented by stopPolling() to cancel pending startPolling() chains
+    let pollInFlight = false;
     let connected = false;
     let lastCommandTime = 0;
 
@@ -171,6 +174,49 @@
         return 'http://' + ampIp + path;
     }
 
+    // fetch() with a timeout, resolving to the response body text.
+    // Without a timeout, requests to an unreachable proxy/amp hang until the OS
+    // TCP timeout (minutes). New polls keep piling up and fill the browser's
+    // per-origin connection limit, so the app stays disconnected long after the
+    // proxy is back.
+    function ampFetch(path, options) {
+        var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var timer = null;
+        if (controller) {
+            options.signal = controller.signal;
+            timer = setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT);
+        }
+        return fetch(ampUrl(path), options)
+            .then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.text();
+            })
+            .then(function (text) {
+                clearTimeout(timer);
+                return text;
+            }, function (err) {
+                clearTimeout(timer);
+                throw err;
+            });
+    }
+
+    function postCommand(cmd, keepalive) {
+        ampFetch('/EventHandler.asp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=UTF-8',
+                'Pragma': 'no-cache',
+                'Cache-Control': 'no-cache',
+                'If-Modified-Since': 'Thu, 1 Jan 1970 00:00:00 GMT'
+            },
+            body: 'WebToHostItem=' + cmd,
+            // keepalive lets the request outlive the page (used on unload)
+            keepalive: !!keepalive
+        }).catch(function () {
+            // Silently fail — status polling will detect disconnection
+        });
+    }
+
     function sendCommand(cmd) {
         const now = Date.now();
         if (now - lastCommandTime < COMMAND_COOLDOWN) {
@@ -178,38 +224,13 @@
             return;
         }
         lastCommandTime = now;
-
-        const url = ampUrl('/EventHandler.asp');
-        const body = 'WebToHostItem=' + cmd;
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain;charset=UTF-8',
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache',
-                'If-Modified-Since': 'Thu, 1 Jan 1970 00:00:00 GMT'
-            },
-            body: body
-        }).catch(function () {
-            // Silently fail — status polling will detect disconnection
-        });
+        postCommand(cmd);
     }
 
     // Bypass the cooldown queue — used for rapid volume stepping on zones that
     // don't support direct volume set (Zone 2, HD Zone).
     function sendCommandDirect(cmd) {
-        var url = ampUrl('/EventHandler.asp');
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain;charset=UTF-8',
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache',
-                'If-Modified-Since': 'Thu, 1 Jan 1970 00:00:00 GMT'
-            },
-            body: 'WebToHostItem=' + cmd
-        }).catch(function () {});
+        postCommand(cmd);
     }
 
     // Send N up/down volume step commands for zones that lack direct-set support.
@@ -234,9 +255,11 @@
     }
 
     function pollStatus() {
-        const url = ampUrl('/StatusHandler.asp');
+        // Don't stack polls while a previous one is still waiting for the amp
+        if (pollInFlight) return;
+        pollInFlight = true;
 
-        fetch(url, {
+        ampFetch('/StatusHandler.asp', {
             method: 'GET',
             headers: {
                 'Pragma': 'no-cache',
@@ -244,27 +267,31 @@
                 'If-Modified-Since': 'Thu, 01 Jun 1970 00:00:00 GMT'
             }
         })
-            .then(function (response) {
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                return response.text();
-            })
             .then(function (text) {
-                setConnected(true);
+                pollInFlight = false;
+                var data;
                 try {
                     // The amp returns JSON (possibly with quirks)
-                    var data = JSON.parse(text);
-                    updateUI(data);
+                    data = JSON.parse(text);
                 } catch (e) {
                     // Try eval-style parse as fallback (the original code uses eval)
                     try {
-                        var data = (new Function('return (' + text + ')'))();
-                        updateUI(data);
+                        data = (new Function('return (' + text + ')'))();
                     } catch (e2) {
                         console.warn('Could not parse status response:', e2);
                     }
                 }
+                // Only report connected for a real status response — a proxy
+                // error page with HTTP 200 must not show a green dot.
+                if (data && typeof data === 'object') {
+                    setConnected(true);
+                    updateUI(data);
+                } else {
+                    setConnected(false);
+                }
             })
             .catch(function () {
+                pollInFlight = false;
                 setConnected(false);
             });
     }
@@ -272,13 +299,19 @@
     // Kick off status polling (mirrors the original: send KOF, CLRLC, then ?AST, ?RGC)
     function startPolling() {
         stopPolling();
+        // The handshake below creates the interval after nested timeouts. If
+        // polling is stopped or restarted in the meantime, the stale chain must
+        // not create an interval of its own (it would be orphaned forever).
+        var generation = pollGeneration;
         // Initial handshake
         sendCommand('KOF');
         sendCommand('CLRLC');
         setTimeout(function () {
+            if (generation !== pollGeneration) return;
             sendCommand('?AST');
             sendCommand('?RGC');
             setTimeout(function () {
+                if (generation !== pollGeneration) return;
                 pollStatus();
                 statusTimer = setInterval(function () {
                     sendCommand('?AST');
@@ -290,6 +323,7 @@
     }
 
     function stopPolling() {
+        pollGeneration++;
         if (statusTimer) {
             clearInterval(statusTimer);
             statusTimer = null;
@@ -710,13 +744,27 @@
             els.ipInput.value = DEFAULT_IP;
             showSetup();
         }
+
+        // Phones throttle or suspend timers while the screen is locked or the
+        // tab is in the background. Pause polling while hidden and restart it
+        // (with a fresh handshake) when the page becomes visible again.
+        document.addEventListener('visibilitychange', function () {
+            if (els.app.classList.contains('hidden')) return; // setup screen is open
+            if (document.hidden) {
+                stopPolling();
+            } else {
+                startPolling();
+            }
+        });
     }
 
-    // Cleanup on page unload (mirror original behavior)
+    // Cleanup on page unload (mirror original behavior).
+    // Bypass the cooldown queue (its setTimeout never runs during unload) and
+    // use keepalive so the browser doesn't cancel the requests.
     window.addEventListener('beforeunload', function () {
-        sendCommand('KOF');
-        sendCommand('CLRLC');
         stopPolling();
+        postCommand('KOF', true);
+        postCommand('CLRLC', true);
     });
 
     // Fetch sources.md for default input configuration, then initialise.

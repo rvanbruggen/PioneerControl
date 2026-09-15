@@ -33,6 +33,7 @@ Always keep `README.md` up to date when making changes:
 
 - `index.html`, `app.js`, `style.css` — the web app, in the project root.
 - `proxy.py` — local CORS proxy, in the project root. Run with `python3 proxy.py <amp-ip>`.
+- `Dockerfile`, `docker-compose.yml`, `docker/` — nginx container (HTTPS + amp reverse proxy) deployed on the Docker host 192.168.68.78; replaces `proxy.py` on the NAS. nginx must send the same amp headers as `proxy.py`.
 - `sources.md` — editable configuration file listing which input sources appear by default per zone. Fetched at runtime by the app; edit this on the NAS to change defaults for all users without touching `app.js`.
 - `PioneerSources/` — reference material from the original Pioneer web interface. Do not modify these files.
 - All app code is vanilla HTML/CSS/JS with no build tools or package managers.
