@@ -74,6 +74,19 @@ The app auto-connects when opened via HTTP — no settings screen needed.
 
 **Note:** Some browsers block cross-origin HTTP requests from `file://` pages. If you see CORS errors in the browser console, use Option 2 instead.
 
+### Option 4: Run in Docker (draft)
+
+An nginx container serves the app and forwards `EventHandler.asp` /
+`StatusHandler.asp` to the amplifier, replacing `proxy.py`.
+
+1. Set `AMP_IP` in `docker-compose.yml` to your amplifier's IP
+2. Run `docker compose up -d --build`
+3. Open `http://<host-ip>:8080/`
+
+`sources.md` is mounted from the host, so edits take effect without a rebuild.
+The container serves plain HTTP only, so the Chrome-on-Android PWA install
+prompt (which needs HTTPS) is not available yet.
+
 ## Deploying updates to the NAS
 
 Once the NAS is set up, use the `deploy.sh` script to push updates without manual SSH steps:
@@ -202,6 +215,9 @@ RixPioneerControl/
 ├── proxy.py               # Local CORS proxy (run to bypass browser restrictions)
 ├── deploy.sh              # One-command deploy: rsync to NAS + restart proxy
 ├── sources.md             # Default input sources per zone (edit to customise for all users)
+├── Dockerfile             # nginx image serving the app + amp reverse proxy (draft)
+├── docker-compose.yml     # Compose service (set AMP_IP here)
+├── docker/                # nginx config template and entrypoint
 ├── PioneerSources/        # Original Pioneer web interface (reference, do not modify)
 ├── CLAUDE.md              # AI coding assistant instructions
 ├── LICENSE                # MIT License

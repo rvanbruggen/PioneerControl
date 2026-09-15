@@ -1,0 +1,13 @@
+services:
+  pioneer-control:
+    build: .
+    container_name: pioneer-control
+    ports:
+      - "8080:80"
+    environment:
+      - AMP_IP=192.168.68.60      # <-- set to your amplifier's IP
+    volumes:
+      # Edit sources.md on the host to change default input sources
+      # for all users, without rebuilding the image.
+      - ./sources.md:/usr/share/nginx/html/sources.md:ro
+    restart: unless-stopped

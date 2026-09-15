@@ -1,0 +1,13 @@
+.git
+.claude
+.DS_Store
+__pycache__
+PioneerSources
+cert.pem
+key.pem
+proxy.py
+deploy.sh
+start.command
+LICENSE
+README.md
+CLAUDE.md
