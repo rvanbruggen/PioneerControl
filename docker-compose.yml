@@ -1,0 +1,9 @@
+services:
+  pioneer-control:
+    build: .
+    container_name: pioneer-control
+    ports:
+      - "8080:80"
+    environment:
+      - AMP_IP=192.168.68.60      # <-- set to your amplifier's IP
+    restart: unless-stopped
