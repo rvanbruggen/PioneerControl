@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# deploy.sh — Sync RixPioneerControl to the NAS and restart the proxy.
+# deploy.sh — Sync PioneerControl to the NAS and restart the proxy.
 #
 # Usage (from anywhere inside the repo):
 #   ./deploy.sh

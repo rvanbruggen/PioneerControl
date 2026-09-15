@@ -2,7 +2,7 @@
 
 ## Project overview
 
-RixPioneerControl is a web-based remote control for Pioneer network-connected amplifiers. It is a single-page app (HTML/CSS/JS) in the project root, suitable for GitHub Pages (served from the root branch).
+PioneerControl is a web-based remote control for Pioneer network-connected amplifiers. It is a single-page app (HTML/CSS/JS) in the project root, suitable for GitHub Pages (served from the root branch).
 
 ## Key maintenance rules
 

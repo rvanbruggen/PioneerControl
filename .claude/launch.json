@@ -4,7 +4,7 @@
     {
       "name": "app",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/rikvanbruggen/Documents/GitHub/RixPioneerControl"],
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/rikvanbruggen/Documents/GitHub/PioneerControl"],
       "port": 8090
     }
   ]

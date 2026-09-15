@@ -1,4 +1,4 @@
-# RixPioneerControl
+# PioneerControl
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
@@ -82,12 +82,15 @@ An nginx container serves the app over HTTPS and forwards `EventHandler.asp` /
 `StatusHandler.asp` to the amplifier — the same job `proxy.py` does, with the
 same headers the amp expects.
 
-| Setting (`docker-compose.yml`) | Default | Meaning |
+**Requirements:** a machine on the same network as the amplifier with Docker
+and the Docker Compose plugin (`docker compose version`) and git.
+
+| Setting (`docker-compose.yml`) | Example value | Meaning |
 |---|---|---|
-| `AMP_IP` | `192.168.68.60` | Amplifier IP |
-| `HOST_IP` | `192.168.68.78` | Docker host IP — written into the self-signed certificate |
+| `AMP_IP` | `192.168.68.60` | Your amplifier's IP |
+| `HOST_IP` | `192.168.68.78` | The Docker host's IP — written into the self-signed certificate |
 | `HTTPS_PORT` | `8443` | Must match the HTTPS host port mapping |
-| ports | `8443:443`, `8081:80` | HTTPS app; plain HTTP redirects to HTTPS |
+| ports | `8443:443`, `8081:80` | HTTPS app; plain HTTP redirects to HTTPS. Change the left-hand numbers if those ports are taken |
 
 - A self-signed certificate is generated on first start and kept in the `certs`
   volume, so users only accept the browser warning once (not after every rebuild).
@@ -95,32 +98,37 @@ same headers the amp expects.
 - `sources.md` is mounted from the host: edit it there and reload the page — no rebuild.
 - `docker ps` shows the container as `healthy` once nginx is up (`/healthz` on port 80).
 
-**First-time setup on the Docker host** (e.g. `192.168.68.78`):
+**First-time setup** — on the Docker host (the repository is public, so no
+GitHub login or SSH key is needed):
 
 ```bash
-ssh rvanbruggen@192.168.68.78
-git clone https://github.com/rvanbruggen/RixPioneerControl.git ~/RixPioneerControl
-cd ~/RixPioneerControl
-nano docker-compose.yml          # check AMP_IP, HOST_IP and ports
+git clone https://github.com/rvanbruggen/PioneerControl.git ~/PioneerControl
+cd ~/PioneerControl
+nano docker-compose.yml          # set AMP_IP and HOST_IP; adjust ports if needed
 docker compose up -d --build
 docker ps --filter name=pioneer-control   # wait for "(healthy)"
 ```
 
-Then open `https://192.168.68.78:8443/`, click **Advanced → Proceed** once, and
+Then open `https://<HOST_IP>:8443/`, click **Advanced → Proceed** once, and
 the app auto-connects.
 
-**Updating** after new commits are pushed:
+Keep your `docker-compose.yml` edits when updating: `git pull` merges them as
+long as the same lines didn't change upstream (otherwise run `git stash`,
+`git pull`, `git stash pop`).
+
+**Updating** to the latest version:
 
 ```bash
-ssh rvanbruggen@192.168.68.78 'cd ~/RixPioneerControl && git pull && docker compose up -d --build'
+cd ~/PioneerControl && git pull && docker compose up -d --build
 ```
 
-**Useful commands** (on the Docker host, in `~/RixPioneerControl`):
+**Useful commands** (on the Docker host, in `~/PioneerControl`):
 
 ```bash
 docker compose logs -f           # nginx access/error log
-docker compose restart           # restart after editing docker-compose.yml values
+docker compose up -d             # apply changed docker-compose.yml values
 docker compose down              # stop and remove the container (certificate volume is kept)
+docker compose down -v           # also delete the certificate, e.g. after changing HOST_IP
 ```
 
 ## Deploying updates to the NAS
@@ -244,7 +252,7 @@ new defaults on next load.
 ## Project structure
 
 ```
-RixPioneerControl/
+PioneerControl/
 ├── index.html             # Main page
 ├── app.js                 # Application logic & network layer
 ├── style.css              # Responsive styles
