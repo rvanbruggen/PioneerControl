@@ -6,7 +6,7 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.11.0';
+    const APP_VERSION = '0.11.1';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
@@ -201,7 +201,7 @@
     }
 
     function postCommand(cmd, keepalive) {
-        ampFetch('/EventHandler.asp', {
+        return ampFetch('/EventHandler.asp', {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain;charset=UTF-8',
@@ -227,31 +227,68 @@
         postCommand(cmd);
     }
 
-    // Bypass the cooldown queue — used for rapid volume stepping on zones that
-    // don't support direct volume set (Zone 2, HD Zone).
-    function sendCommandDirect(cmd) {
-        postCommand(cmd);
-    }
-
-    // Send N up/down volume step commands for zones that lack direct-set support.
-    // Commands are spaced 50 ms apart so the amp can keep up.
+    // Send N up/down volume step commands for zones that lack direct-set support
+    // (Zone 2, HD Zone). Steps are sent one at a time — each waits for the
+    // previous request to finish — so none get dropped on the way to the amp.
     var STEP_CMDS = { z2: { up: 'ZU', down: 'ZD' }, hd: { up: 'HZU', down: 'HZD' } };
+    var STEP_GAP = 20;          // ms pause between completed step requests
+    var PROBE_STEPS = 4;        // steps sent when the current volume is unknown (2 dB)
+    var PENDING_TTL = 10000;    // ms to keep an unfinished target alive
+    var stepGeneration = { z2: 0, hd: 0 };
+    var stepsRunning = { z2: false, hd: false };
+    // Target volume code still to reach once the amp reports a real volume
+    var pendingTarget = { z2: null, hd: null };
+
     function setVolumeBySteps(zone, targetPct, slider) {
-        var current = currentVolCode[zone];
-        if (!current || current <= 0) return;
         var target = Math.max(1, Math.min(185, Math.round(targetPct / 100 * 185)));
+        var current = currentVolCode[zone];
+        if (!current || current <= 0) {
+            // Volume unknown (the amp reported 0 / "---"). Stepping all the way
+            // from an assumed 0 could make it very loud if that report was wrong,
+            // so nudge a few steps in the requested direction; the amp then
+            // reports its real volume and the rest follows (see resumePendingSteps).
+            pendingTarget[zone] = { code: target, until: Date.now() + PENDING_TTL, slider: slider };
+            runSteps(zone, target > 1 ? STEP_CMDS[zone].up : STEP_CMDS[zone].down, PROBE_STEPS, 0, slider);
+            return;
+        }
+        pendingTarget[zone] = null;
         var delta = target - current;
         if (delta === 0) return;
-        var cmd = delta > 0 ? STEP_CMDS[zone].up : STEP_CMDS[zone].down;
-        var steps = Math.min(Math.abs(delta), 90); // cap at 90 steps (~23 dB)
-        var totalMs = steps * 50;
-        // Block poll-driven slider updates until all steps have fired + 1 s buffer
-        if (slider) slider._settledUntil = Date.now() + totalMs + 1000;
-        for (var i = 0; i < steps; i++) {
-            (function (delay) {
-                setTimeout(function () { sendCommandDirect(cmd); }, delay);
-            })(i * 50);
+        var steps = Math.min(Math.abs(delta), 90); // cap at 90 steps (45 dB)
+        runSteps(zone, delta > 0 ? STEP_CMDS[zone].up : STEP_CMDS[zone].down, steps, delta > 0 ? 1 : -1, slider);
+    }
+
+    // Finish a move that started while the volume was unknown, once a real
+    // volume has been reported.
+    function resumePendingSteps(zone) {
+        var p = pendingTarget[zone];
+        if (!p || stepsRunning[zone]) return;
+        if (Date.now() > p.until) { pendingTarget[zone] = null; return; }
+        if (!currentVolCode[zone]) return;
+        setVolumeBySteps(zone, p.code / 185 * 100, p.slider);
+    }
+
+    // dir: +1 / -1 tracks the expected volume locally while stepping, 0 = don't track
+    function runSteps(zone, cmd, steps, dir, slider) {
+        var gen = ++stepGeneration[zone];   // a new move cancels one still running
+        stepsRunning[zone] = true;
+        function next(i) {
+            if (gen !== stepGeneration[zone]) return;
+            if (i >= steps) {
+                stepsRunning[zone] = false;
+                // Let the amp settle before polls may move the slider again
+                if (slider) slider._settledUntil = Date.now() + 1000;
+                return;
+            }
+            if (slider) slider._settledUntil = Date.now() + REQUEST_TIMEOUT + 1000;
+            postCommand(cmd).then(function () {
+                if (dir && currentVolCode[zone]) {
+                    currentVolCode[zone] = Math.max(1, Math.min(185, currentVolCode[zone] + dir));
+                }
+                setTimeout(function () { next(i + 1); }, STEP_GAP);
+            });
         }
+        next(0);
     }
 
     function pollStatus() {
@@ -372,8 +409,7 @@
             if (data.Z[1] && data.Z[1].Z2) {
                 var z2 = data.Z[1].Z2;
                 updateZonePower(els.z2Power, z2.P);
-                updateVolume(els.z2Volume, els.z2VolSlider, z2.V, z2.M);
-                if (z2.V > 0 && z2.M !== 1) currentVolCode.z2 = parseInt(z2.V, 10);
+                updateStepZoneVolume('z2', els.z2Volume, els.z2VolSlider, z2);
                 updateInputHighlight('z2-inputs', z2.F);
                 toggleZoneBody('zone2', z2.P);
             }
@@ -392,8 +428,7 @@
                     $('#hd-vol-section').style.display = 'none';
                 } else {
                     $('#hd-vol-section').style.display = '';
-                    updateVolume(els.hdVolume, els.hdVolSlider, hdData.V, hdData.M);
-                    if (hdData.V > 0 && hdData.M !== 1) currentVolCode.hd = parseInt(hdData.V, 10);
+                    updateStepZoneVolume('hd', els.hdVolume, els.hdVolSlider, hdData);
                 }
                 updateInputHighlight('hd-inputs', hdData.F);
                 toggleZoneBody('hdzone', hdData.P);
@@ -434,6 +469,21 @@
     function setSliderFill(slider, level) {
         slider.value = level;
         slider.style.setProperty('--fill', (level * 10) + '%');
+    }
+
+    // Volume update for the step-controlled zones (Zone 2, HD Zone).
+    function updateStepZoneVolume(zone, el, slider, zd) {
+        var vol = parseInt(zd.V, 10);
+        if (vol > 0 && zd.M !== 1) {
+            // Don't overwrite the locally tracked value while steps are in flight
+            if (!stepsRunning[zone]) currentVolCode[zone] = vol;
+            resumePendingSteps(zone);
+        } else if (vol === 0 && zd.P === 1 && zd.M !== 1 && currentVolCode[zone]) {
+            // The amp sometimes reports 0 ("---") for a zone that is on and
+            // playing. Keep showing the last real volume instead of a bogus 0.
+            return;
+        }
+        updateVolume(el, slider, zd.V, zd.M);
     }
 
     function updateVolume(el, slider, vol, mute) {

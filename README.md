@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.11.0**
+**Current version: 0.11.1**
 
 ## Why this project?
 
@@ -273,6 +273,7 @@ PioneerControl/
 
 ## Version history
 
+- **0.11.1** — Fix Zone 2 / HD Zone volume slider snapping back to 0 without changing the volume. The amp sometimes reports volume `0` ("---") for a zone that is on and playing; the app now keeps showing the last real volume instead. If the volume is unknown when the slider is moved, the app nudges a few steps and finishes the move once the amp reports its real volume (previously it silently sent nothing). Volume steps are now sent one after another instead of firing 50 ms timers in parallel, so steps are no longer dropped.
 - **0.11.0** — Docker deployment and connection reliability. New nginx-based Docker setup (HTTPS with a persistent self-signed certificate, HTTP→HTTPS redirect, health check, host-mounted `sources.md`) replaces the NAS proxy. Connectivity fixes: requests now time out after 5 s instead of hanging when the proxy/amp is unreachable, polls no longer stack up, restarting polling can't leave an orphaned interval, the status dot only turns green for a valid status response, polling pauses while the page is hidden and restarts when it's visible again (phone wake), and the unload cleanup commands (`KOF`, `CLRLC`) are actually delivered.
 - **0.10.0** — Stepped volume sliders: replace smooth 0–100% sliders with fixed 0–10 level controls with visible tick marks. Each level maps to a specific dB value (~9.2 dB per step), making volume changes predictable and preventing accidental jumps on touchscreens.
 - **0.9.9** — Add PNG icons (192×192 and 512×512) required by Chrome on Android to show the PWA install prompt. SVG-only manifests are not sufficient for the install banner.
