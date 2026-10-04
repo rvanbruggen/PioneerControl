@@ -462,6 +462,18 @@ main {
     pointer-events: none;
 }
 
+/* Zero-width labels centred on the tick, so "10" and "1" line up with the thumb */
+.vol-ticks span {
+    width: 0;
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.vol-ticks .minor {
+    opacity: 0.6;
+}
+
 .volume-label {
     font-size: 0.8rem;
     color: var(--text-dim);

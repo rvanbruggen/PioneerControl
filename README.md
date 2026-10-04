@@ -2,7 +2,7 @@
 
 A web-based remote control for Pioneer network-connected amplifiers/receivers. Built as a replacement for the discontinued Pioneer Android app.
 
-**Current version: 0.11.1**
+**Current version: 0.12.0**
 
 ## Why this project?
 
@@ -12,7 +12,7 @@ Pioneer's official Android app for controlling their network-connected amplifier
 
 - **Multi-zone control** — Main Zone, Zone 2, and HD Zone
 - **Power on/off** per zone
-- **Volume control** — slider (0–100%) per zone with live dB readout, plus mute button per zone
+- **Volume control** — stepped slider per zone (20 ticks, 4.6 dB each, from -80 to +12 dB) with live dB readout, plus mute button per zone
 - **Configurable input sources** — `sources.md` in the project sets the default inputs per zone for all users; individuals can still override via Settings
 - **Live status display** — real-time power state, volume level (in dB), active input, and listening mode
 - **Configurable app name** — rename the app to anything you like
@@ -273,6 +273,7 @@ PioneerControl/
 
 ## Version history
 
+- **0.12.0** — Finer volume sliders: 20 ticks instead of 10 over the same -80 to +12 dB range, so each tick is 4.6 dB instead of 9.2 dB. Tick labels on even levels with dots in between, centred exactly under the slider positions. Zone 2 / HD Zone slider targets now use the same dB mapping as the labels. Service worker cache bumped so installed apps pick up the new version (0.11.1 had not bumped it).
 - **0.11.1** — Fix Zone 2 / HD Zone volume slider snapping back to 0 without changing the volume. The amp sometimes reports volume `0` ("---") for a zone that is on and playing; the app now keeps showing the last real volume instead. If the volume is unknown when the slider is moved, the app nudges a few steps and finishes the move once the amp reports its real volume (previously it silently sent nothing). Volume steps are now sent one after another instead of firing 50 ms timers in parallel, so steps are no longer dropped.
 - **0.11.0** — Docker deployment and connection reliability. New nginx-based Docker setup (HTTPS with a persistent self-signed certificate, HTTP→HTTPS redirect, health check, host-mounted `sources.md`) replaces the NAS proxy. Connectivity fixes: requests now time out after 5 s instead of hanging when the proxy/amp is unreachable, polls no longer stack up, restarting polling can't leave an orphaned interval, the status dot only turns green for a valid status response, polling pauses while the page is hidden and restarts when it's visible again (phone wake), and the unload cleanup commands (`KOF`, `CLRLC`) are actually delivered.
 - **0.10.0** — Stepped volume sliders: replace smooth 0–100% sliders with fixed 0–10 level controls with visible tick marks. Each level maps to a specific dB value (~9.2 dB per step), making volume changes predictable and preventing accidental jumps on touchscreens.

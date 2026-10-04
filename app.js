@@ -6,12 +6,16 @@
 (function () {
     'use strict';
 
-    const APP_VERSION = '0.11.1';
+    const APP_VERSION = '0.12.0';
     const DEFAULT_IP = '192.168.68.60';
     const DEFAULT_APP_NAME = 'Rix Pioneer Amp Control';
     const STATUS_POLL_INTERVAL = 2000; // ms
     const COMMAND_COOLDOWN = 150; // ms between rapid commands
     const REQUEST_TIMEOUT = 5000; // ms before a request to the proxy/amp is aborted
+    // Volume sliders: VOL_LEVELS ticks spanning VOL_MIN_DB..VOL_MAX_DB (4.6 dB per tick)
+    const VOL_LEVELS = 20;
+    const VOL_MIN_DB = -80;
+    const VOL_MAX_DB = 12;
 
     // Strip any protocol prefix (http:// or https://) — we store only host:port.
     function stripProtocol(addr) {
@@ -239,8 +243,8 @@
     // Target volume code still to reach once the amp reports a real volume
     var pendingTarget = { z2: null, hd: null };
 
-    function setVolumeBySteps(zone, targetPct, slider) {
-        var target = Math.max(1, Math.min(185, Math.round(targetPct / 100 * 185)));
+    function setVolumeBySteps(zone, targetCode, slider) {
+        var target = Math.max(1, Math.min(185, Math.round(targetCode)));
         var current = currentVolCode[zone];
         if (!current || current <= 0) {
             // Volume unknown (the amp reported 0 / "---"). Stepping all the way
@@ -265,7 +269,7 @@
         if (!p || stepsRunning[zone]) return;
         if (Date.now() > p.until) { pendingTarget[zone] = null; return; }
         if (!currentVolCode[zone]) return;
-        setVolumeBySteps(zone, p.code / 185 * 100, p.slider);
+        setVolumeBySteps(zone, p.code, p.slider);
     }
 
     // dir: +1 / -1 tracks the expected volume locally while stepping, 0 = don't track
@@ -468,7 +472,7 @@
 
     function setSliderFill(slider, level) {
         slider.value = level;
-        slider.style.setProperty('--fill', (level * 10) + '%');
+        slider.style.setProperty('--fill', (level / VOL_LEVELS * 100) + '%');
     }
 
     // Volume update for the step-controlled zones (Zone 2, HD Zone).
@@ -499,10 +503,20 @@
             var db = (parseInt(vol, 10) - 161) / 2;
             el.textContent = db + ' dB';
             if (slider) {
-                var level = Math.round((db + 80) / 92 * 10);
-                setSliderFill(slider, Math.max(0, Math.min(10, level)));
+                setSliderFill(slider, dbToLevel(db));
             }
         }
+    }
+
+    // Slider level (0..VOL_LEVELS) <-> dB
+    function levelToDb(level) {
+        var db = VOL_MIN_DB + (level / VOL_LEVELS) * (VOL_MAX_DB - VOL_MIN_DB);
+        return Math.round(db * 2) / 2;   // amp works in 0.5 dB steps
+    }
+
+    function dbToLevel(db) {
+        var level = Math.round((db - VOL_MIN_DB) / (VOL_MAX_DB - VOL_MIN_DB) * VOL_LEVELS);
+        return Math.max(0, Math.min(VOL_LEVELS, level));
     }
 
     var VOL_SUFFIX = { main: 'VL', z2: 'ZV', hd: 'HZV' };
@@ -721,20 +735,18 @@
             // mousedown fired on a parent but the slider already has focus)
             cfg.slider.addEventListener('input', function () {
                 cfg.slider._dragging = true;
-                cfg.slider.style.setProperty('--fill', (cfg.slider.value * 10) + '%');
-                var db = Math.round((-80 + (parseInt(cfg.slider.value) / 10) * 92) * 2) / 2;
-                cfg.label.textContent = db + ' dB';
+                cfg.slider.style.setProperty('--fill', (cfg.slider.value / VOL_LEVELS * 100) + '%');
+                cfg.label.textContent = levelToDb(parseInt(cfg.slider.value, 10)) + ' dB';
             });
             function commitSlider() {
                 if (!cfg.slider._dragging) return;
                 cfg.slider._dragging = false;
-                var level = parseInt(cfg.slider.value);
+                var db = levelToDb(parseInt(cfg.slider.value, 10));
                 if (cfg.zone === 'main') {
                     cfg.slider._settledUntil = Date.now() + 1000;
-                    var db = -80 + (level / 10) * 92;
                     setVolumeByDb('main', db);
                 } else {
-                    setVolumeBySteps(cfg.zone, level * 10, cfg.slider);
+                    setVolumeBySteps(cfg.zone, db * 2 + 161, cfg.slider);
                 }
             }
             // 'change' is the reliable commit event for <input type=range> — fires on
